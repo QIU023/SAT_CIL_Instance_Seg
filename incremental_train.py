@@ -6,6 +6,9 @@ from utils import timer
 from layers.modules import MultiBoxLoss, MultiBoxLoss_dis, MultiBoxLoss_expert
 from yolact import Yolact
 from yolact_expert import Yolact_expert
+
+# from modules.segformer_offical.mix_transformer import mit_b2
+
 import os
 import sys
 import time
@@ -247,7 +250,6 @@ def train():
   #  CUDA_VISIBLE_DEVICES = [0]
     to_learn, prefetch_classes, remain = split_classes(cfg)
     dataset = COCODetection(image_path=cfg.dataset.train_images,
-
                             info_file=cfg.dataset.train_info,
                             transform=SSDAugmentation(MEANS),cfg=cfg)
     

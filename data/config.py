@@ -114,12 +114,14 @@ dataset_base = Config({
     'name': 'Base Dataset',
 
     # Training images and annotations
-    'train_images': '/data2/gyn/PycharmProjects/AAAI2021ATTMPT/detectron2/tools/datasets/coco/train2014/',
-    'train_info':   'path_to_annotation_file',
+    # 'train_images': '/data2/gyn/PycharmProjects/AAAI2021ATTMPT/detectron2/tools/datasets/coco/train2014/',
+    'train_images': '/opt/tiger/occupy_arnold/SAT_data/COCODataset/images/train2017',
+    'train_info':   '/opt/tiger/occupy_arnold/SAT_data/COCODataset/annotations/instances_train2017.json',
 
     # Validation images and annotations.
-    'valid_images': '/data2/gyn/PycharmProjects/AAAI2021ATTMPT/detectron2/tools/datasets/coco/val2014/',
-    'valid_info':   'path_to_annotation_file',
+    # 'valid_images': '/data2/gyn/PycharmProjects/AAAI2021ATTMPT/detectron2/tools/datasets/coco/val2014/',
+    'valid_images': '/opt/tiger/occupy_arnold/SAT_data/COCODataset/images/val2017',
+    'valid_info':   '/opt/tiger/occupy_arnold/SAT_data/COCODataset/annotations/instances_val2017.json',
 
     # Whether or not to load GT. If this is False, eval.py quantitative evaluation won't work.
     'has_gt': True,
@@ -136,8 +138,10 @@ dataset_base = Config({
 coco2014_dataset = dataset_base.copy({
     'name': 'COCO 2014',
     
-    'train_info': '/data2/gyn/PycharmProjects/AAAI2021ATTMPT/detectron2/tools/datasets/coco/annotations/instances_train2014.json',
-    'valid_info': '/data2/gyn/PycharmProjects/AAAI2021ATTMPT/detectron2/tools/datasets/coco/annotations/instances_val2014.json',
+    # 'train_info': '/data2/gyn/PycharmProjects/AAAI2021ATTMPT/detectron2/tools/datasets/coco/annotations/instances_train2014.json',
+    # 'valid_info': '/data2/gyn/PycharmProjects/AAAI2021ATTMPT/detectron2/tools/datasets/coco/annotations/instances_val2014.json',
+    'train_info': '/opt/tiger/occupy_arnold/SAT_data/COCODataset/annotations/instances_train2017.json',
+    'val_info': '/opt/tiger/occupy_arnold/SAT_data/COCODataset/annotations/instances_val2017.json',
 
     'label_map': COCO_LABEL_MAP
 })
