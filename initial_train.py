@@ -128,8 +128,18 @@ if args.batch_size // torch.cuda.device_count() < 6:
         print('Per-GPU batch size is less than the recommended limit for batch norm. Disabling batch norm.')
     cfg.freeze_bn = True
 
-# loss_types = ['B', 'C', 'M', 'P', 'D', 'E', 'S', 'I']
-loss_types = ['BoundingBox', 'ClassConfidence', 'Mask', 'P', 'Distillation', 'Expect', 'Student', 'I']
+loss_types = ['B', 'C', 'M', 'P', 'D', 'E', 'S', 'I']
+fullname = {
+    'B': 'Box',
+    'C': 'Class',
+    'M': 'Mask',
+    'P': 'P',
+    'D': 'Distill',
+    'E': 'Expect',
+    'S': 'Student',
+    'I': 'I'
+}
+# loss_types = ['BoundingBox', 'ClassConfidence', 'Mask', 'P', 'Distillation', 'Expect', 'Student', 'I']
 
 if torch.cuda.is_available():
     if args.cuda:
@@ -391,7 +401,8 @@ def train():
                     str(datetime.timedelta(seconds=(cfg.max_iter - iteration) * time_avg.get_avg())).split('.')[0]
 
                     total = sum([loss_avgs[k].get_avg() for k in losses])
-                    loss_labels = sum([[k, loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
+                    # loss_labels = sum([[k, loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
+                    loss_labels = sum([[fullname[k], loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
 
                     print(('epoch:[%3d] iteration:%7d ||' + (
                                 ' %s: %.3f |' * len(losses)) + ' T: %.3f || ETA: %s || timer: %.3f || lr:%.e')
@@ -541,7 +552,8 @@ def compute_validation_loss(net, data_loader, criterion):
         for k in losses:
             losses[k] /= iterations
 
-        loss_labels = sum([[k, losses[k]] for k in loss_types if k in losses], [])
+        # loss_labels = sum([[k, losses[k]] for k in loss_types if k in losses], [])
+        loss_labels = sum([[fullname[k], loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
         print(('Validation ||' + (' %s: %.3f |' * len(losses)) + ')') % tuple(loss_labels), flush=True)
 
 
