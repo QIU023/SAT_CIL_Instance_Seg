@@ -7,6 +7,8 @@ from layers.modules import MultiBoxLoss, MultiBoxLoss_dis, MultiBoxLoss_expert
 from yolact import Yolact
 from yolact_expert import Yolact_expert
 
+from tqdm import tqdm
+
 # from modules.segformer_offical.mix_transformer import mit_b2
 
 import os
@@ -137,7 +139,8 @@ if args.batch_size // torch.cuda.device_count() < 6:
         print('Per-GPU batch size is less than the recommended limit for batch norm. Disabling batch norm.')
     cfg.freeze_bn = True
 
-loss_types = ['B', 'C', 'M', 'P', 'D', 'E', 'S', 'I']
+# loss_types = ['B', 'C', 'M', 'P', 'D', 'E', 'S', 'I']
+loss_types = ['BoundingBox', 'ClassConfidence', 'Mask', 'P', 'Distillation', 'Expect', 'Student', 'I']
 
 class CustomDataParallel(nn.DataParallel):
     """
@@ -388,7 +391,8 @@ def train():
             if (epoch+1)*epoch_size < iteration:
                 continue
             
-            for datum in data_loader:
+            # tbar = 
+            for datum in tqdm(data_loader):
                 # Stop if we've reached an epoch if we're resuming from start_iter
                 if iteration == (epoch+1)*epoch_size:
                     break

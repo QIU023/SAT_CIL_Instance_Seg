@@ -24,6 +24,7 @@ import datetime
 # Oof
 import eval as eval_script
 
+from tqdm import tqdm
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1-10")
@@ -127,7 +128,8 @@ if args.batch_size // torch.cuda.device_count() < 6:
         print('Per-GPU batch size is less than the recommended limit for batch norm. Disabling batch norm.')
     cfg.freeze_bn = True
 
-loss_types = ['B', 'C', 'M', 'P', 'D', 'E', 'S', 'I']
+# loss_types = ['B', 'C', 'M', 'P', 'D', 'E', 'S', 'I']
+loss_types = ['BoundingBox', 'ClassConfidence', 'Mask', 'P', 'Distillation', 'Expect', 'Student', 'I']
 
 if torch.cuda.is_available():
     if args.cuda:
@@ -321,7 +323,7 @@ def train():
             if (epoch + 1) * epoch_size < iteration:
                 continue
 
-            for datum in data_loader:
+            for datum in tqdm(data_loader):
                 # Stop if we've reached an epoch if we're resuming from start_iter
                 if iteration == (epoch + 1) * epoch_size:
                     break
@@ -391,7 +393,7 @@ def train():
                     total = sum([loss_avgs[k].get_avg() for k in losses])
                     loss_labels = sum([[k, loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
 
-                    print(('[%3d] %7d ||' + (
+                    print(('epoch:[%3d] iteration:%7d ||' + (
                                 ' %s: %.3f |' * len(losses)) + ' T: %.3f || ETA: %s || timer: %.3f || lr:%.e')
                           % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed] + [cur_lr]), flush=True)
 
