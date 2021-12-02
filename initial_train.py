@@ -25,6 +25,7 @@ import datetime
 import eval as eval_script
 
 from tqdm import tqdm
+# from modules.segformer_offical.mix_transformer import mit_b2
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1-10")
@@ -405,7 +406,7 @@ def train():
                     loss_labels = sum([[fullname[k], loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
 
                     print(('epoch:[%3d] iteration:%7d ||' + (
-                                ' %s: %.3f |' * len(losses)) + ' T: %.3f || ETA: %s || timer: %.3f || lr:%.e')
+                                ' %s: %.3f |' * len(losses)) + ' Total: %.3f || ETA: %s || timer: %.3f || lr:%.e')
                           % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed] + [cur_lr]), flush=True)
 
                 if args.log:
