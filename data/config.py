@@ -149,8 +149,8 @@ coco2014_dataset = dataset_base.copy({
 coco2017_dataset = dataset_base.copy({
     'name': 'COCO 2017',
     
-    'train_info': './data/coco/annotations/instances_train2017.json',
-    'valid_info': './data/coco/annotations/instances_val2017.json',
+    'train_info': '/opt/tiger/occupy_arnold/SAT_data/COCODataset/annotations/instances_train2017.json',
+    'val_info': '/opt/tiger/occupy_arnold/SAT_data/COCODataset/annotations/instances_val2017.json',
 
     'label_map': COCO_LABEL_MAP
 })
@@ -172,8 +172,10 @@ PASCAL_CLASSES = ("aeroplane", "bicycle", "bird", "boat", "bottle",
 pascal_sbd_dataset = dataset_base.copy({
     'name': 'Pascal SBD 2012',
 
-    'train_images': './data/sbd/img',
-    'valid_images': './data/sbd/img',
+    # 'train_images': './data/sbd/img',
+    # 'valid_images': './data/sbd/img',
+    'train_images': '/opt/tiger/occupy_arnold/SAT_data/PascalVOC12/JPEGImages',
+    'valid_images': '/opt/tiger/occupy_arnold/SAT_data/PascalVOC12/JPEGImages',
     
     'train_info': './data/sbd/pascal_sbd_train.json',
     'valid_info': './data/sbd/pascal_sbd_val.json',
@@ -865,6 +867,7 @@ yolact_plus_resnet50_config = yolact_plus_base_config.copy({
 
 # Default config
 cfg = yolact_base_config.copy()
+# cfg = coco_base_config.copy()
 
 def set_cfg(config_name:str):
     """ Sets the active config. Works even if cfg is already imported! """
