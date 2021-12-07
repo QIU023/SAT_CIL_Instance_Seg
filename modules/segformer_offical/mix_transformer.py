@@ -244,6 +244,7 @@ class MixVisionTransformer(nn.Module):
         super().__init__()
         self.num_classes = num_classes
         self.depths = depths
+        self.layers = [1,2,3,4]
         
 #         self.return_attn = return_attn
 #         self.batch_attn = []
