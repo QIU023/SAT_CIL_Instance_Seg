@@ -270,6 +270,7 @@ mit_b2_backbone = backbone_base.copy({
     'name': 'MixTransformer',
     'type': MixTransformerBackbone,
     'transform': mit_transform,
+    'selected_layers': list(range(1, 4)),
     'pred_scales': [[1]]*4,
     'pred_aspect_ratios': [ [[0.66685089, 1.7073535, 0.87508774, 1.16524493, 0.49059086]] ] * 4,
 })
@@ -827,7 +828,10 @@ yolact_mitb2_pascal_config_init = yolact_resnet50_config.copy({
     'name': None,  # Will default to yolact_resnet50_pascal
 
     # Dataset stuff
-    'backbone': mit_b2_backbone,
+    'backbone': mit_b2_backbone.copy({
+        'pred_scales': [[32], [64], [128], [256], [512]],
+        'use_square_anchors': False,
+    }),
     'dataset': pascal_sbd_dataset,
     'num_classes': len(pascal_sbd_dataset.class_names) + 1,
     'distillation': False,
@@ -843,10 +847,10 @@ yolact_mitb2_pascal_config_init = yolact_resnet50_config.copy({
     #     'pred_scales': [[32], [64], [128], [256], [512]],
     #     'use_square_anchors': False,
     # })
-    'backbone': yolact_resnet50_config.backbone.copy({
-        'pred_scales': [[32], [64], [128], [256], [512]],
-        'use_square_anchors': False,
-    })
+    # 'backbone': yolact_resnet50_config.backbone.copy({
+    #     'pred_scales': [[32], [64], [128], [256], [512]],
+    #     'use_square_anchors': False,
+    # })
 })
 
 yolact_resnet50_pascal_config_expert = yolact_resnet50_config.copy({
@@ -864,7 +868,7 @@ yolact_resnet50_pascal_config_expert = yolact_resnet50_config.copy({
     'lr_steps': (30000, 40000),
 
     'backbone': yolact_resnet50_config.backbone.copy({
-        'pred_scales': [[32], [64], [128], [256], [512]],
+        'pred_scales': [[16], [32], [64], [128]],
         'use_square_anchors': False,
     })
 })
