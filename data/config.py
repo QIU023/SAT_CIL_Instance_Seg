@@ -270,7 +270,7 @@ mit_b2_backbone = backbone_base.copy({
     'name': 'MixTransformer',
     'type': MixTransformerBackbone,
     'transform': mit_transform,
-    'selected_layers': list(range(1, 4)),
+    'selected_layers': list(range(1, 5)),
     'pred_scales': [[1]]*4,
     'pred_aspect_ratios': [ [[0.66685089, 1.7073535, 0.87508774, 1.16524493, 0.49059086]] ] * 4,
 })
