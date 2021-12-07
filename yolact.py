@@ -698,12 +698,15 @@ class Yolact(nn.Module):
 
         self.selected_layers = cfg.backbone.selected_layers
         src_channels = self.backbone.channels
+        # print(src_channels)
+        # raise RuntimeError
 
         if cfg.use_maskiou:
             self.maskiou_net = FastMaskIoUNet()
 
         if cfg.fpn is not None:
             # Some hacky rewiring to accomodate the FPN
+            print(self.selected_layers, src_channels)
             self.fpn = FPN([src_channels[i] for i in self.selected_layers])
             self.selected_layers = list(range(len(self.selected_layers) + cfg.fpn.num_downsample))
             src_channels = [cfg.fpn.num_features] * len(self.selected_layers)
