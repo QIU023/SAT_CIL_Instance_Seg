@@ -1,4 +1,5 @@
 from backbone import ResNetBackbone, VGGBackbone, ResNetBackboneGN, DarkNetBackbone
+from backbone import mit_b2 as MixTransformerBackbone
 from math import sqrt
 import torch
 
@@ -196,6 +197,13 @@ resnet_transform = Config({
     'to_float': False,
 })
 
+mit_transform = Config({
+    'channel_order': 'RGB',
+    'normalize': True,
+    'subtract_means': False,
+    'to_float': True,
+})
+
 vgg_transform = Config({
     # Note that though vgg is traditionally BGR,
     # the channel order of vgg_reducedfc.pth is RGB.
@@ -256,6 +264,14 @@ resnet101_gn_backbone = backbone_base.copy({
     'selected_layers': list(range(2, 8)),
     'pred_scales': [[1]]*6,
     'pred_aspect_ratios': [ [[0.66685089, 1.7073535, 0.87508774, 1.16524493, 0.49059086]] ] * 6,
+})
+
+mit_b2_backbone = backbone_base.copy({
+    'name': 'MixTransformer',
+    'type': MixTransformerBackbone,
+    'transform': mit_transform,
+    'pred_scales': [[1]]*4,
+    'pred_aspect_ratios': [ [[0.66685089, 1.7073535, 0.87508774, 1.16524493, 0.49059086]] ] * 4,
 })
 
 resnet101_dcn_inter3_backbone = resnet101_backbone.copy({
@@ -811,6 +827,7 @@ yolact_mitb2_pascal_config_init = yolact_resnet50_config.copy({
     'name': None,  # Will default to yolact_resnet50_pascal
 
     # Dataset stuff
+    'backbone': mit_b2_backbone,
     'dataset': pascal_sbd_dataset,
     'num_classes': len(pascal_sbd_dataset.class_names) + 1,
     'distillation': False,
@@ -826,7 +843,10 @@ yolact_mitb2_pascal_config_init = yolact_resnet50_config.copy({
     #     'pred_scales': [[32], [64], [128], [256], [512]],
     #     'use_square_anchors': False,
     # })
-    'backbone': 'mit_b2'
+    'backbone': yolact_resnet50_config.backbone.copy({
+        'pred_scales': [[32], [64], [128], [256], [512]],
+        'use_square_anchors': False,
+    })
 })
 
 yolact_resnet50_pascal_config_expert = yolact_resnet50_config.copy({
