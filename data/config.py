@@ -831,6 +831,7 @@ yolact_mitb2_pascal_config_init = yolact_resnet50_config.copy({
     'backbone': mit_b2_backbone.copy({
         'pred_scales': [[16], [32], [64], [128], [256], [512]],
         'use_square_anchors': False,
+        'path': 'mit_b2.pth',
     }),
     'dataset': pascal_sbd_dataset,
     'num_classes': len(pascal_sbd_dataset.class_names) + 1,
