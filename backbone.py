@@ -454,10 +454,10 @@ def construct_backbone(cfg):
     backbone = cfg.type(*cfg.args)
 
     # Add downsampling layers until we reach the number we need
-    num_layers = max(cfg.selected_layers) + 1
-    # print(backbone.layers, num_layers)
+    # num_layers = max(cfg.selected_layers) + 1
+    # # print(backbone.layers, num_layers)
 
-    while len(backbone.layers) < num_layers:
-        backbone.add_layer()
+    # while len(backbone.layers) < num_layers:
+    #     backbone.add_layer()
 
     return backbone
