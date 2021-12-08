@@ -667,6 +667,8 @@ class Yolact(nn.Module):
 
         self.backbone = construct_backbone(cfg.backbone)
 
+        self.cfg = cfg
+
         if cfg.freeze_bn:
             self.freeze_bn()
         self.to_learn, prefetch_classes, remain = split_classes(cfg)
@@ -697,6 +699,9 @@ class Yolact(nn.Module):
                 cfg.mask_dim += 1
 
         self.selected_layers = cfg.backbone.selected_layers
+        # print(self.selected_layers)
+        # raise RuntimeError
+
         src_channels = self.backbone.channels
         # print(src_channels)
         # raise RuntimeError
@@ -707,19 +712,30 @@ class Yolact(nn.Module):
         if cfg.fpn is not None:
             # Some hacky rewiring to accomodate the FPN
             print(self.selected_layers, src_channels)
+            # src_channels = [3] + src_channels
             self.fpn = FPN([src_channels[i] for i in self.selected_layers])
             self.selected_layers = list(range(len(self.selected_layers) + cfg.fpn.num_downsample))
+
+            print(self.selected_layers)
+
             src_channels = [cfg.fpn.num_features] * len(self.selected_layers)
 
         self.prediction_layers = nn.ModuleList()
         self.prediction_layers_extend = nn.ModuleList()
         cfg.num_heads = len(self.selected_layers)
 
+        # if cfg.name == 'mix_transformer':
+        #     print('add additional ratio and scale')
+        #     cfg.backbone.pred_aspect_ratios.append(cfg.backbone.pred_aspect_ratios[-1])
+        #     cfg.backbone.pred_scales.append(cfg.backbone.pred_scales[-1])
+
         for idx, layer_idx in enumerate(self.selected_layers):
             # If we're sharing prediction module weights, have every module's parent be the first one
             parent = None
             if cfg.share_prediction_module and idx > 0:
                 parent = self.prediction_layers[0]
+            
+            # print(idx, layer_idx, cfg.backbone.pred_scales)
 
             pred = PredictionModule(src_channels[layer_idx], src_channels[layer_idx],
                                     aspect_ratios=cfg.backbone.pred_aspect_ratios[idx],
@@ -787,7 +803,11 @@ class Yolact(nn.Module):
     def init_weights(self, backbone_path):
         """ Initialize weights for training. """
         # Initialize the backbone with the pretrained weights.
-        self.backbone.init_backbone(backbone_path)
+
+        if self.cfg.name == 'mix_transformer':
+            self.backbone.load_state_dict(backbone_path)
+        else:
+            self.backbone.init_backbone(backbone_path)
 
         conv_constants = getattr(nn.Conv2d(1, 1, 1), '__constants__')
 
