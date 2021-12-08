@@ -270,9 +270,9 @@ mit_b2_backbone = backbone_base.copy({
     'name': 'MixTransformer',
     'type': MixTransformerBackbone,
     'transform': mit_transform,
-    'selected_layers': list(range(1, 5)),
-    'pred_scales': [[1]]*4,
-    'pred_aspect_ratios': [ [[0.66685089, 1.7073535, 0.87508774, 1.16524493, 0.49059086]] ] * 4,
+    'selected_layers': list(range(0, 4)),
+    'pred_scales': [[1]]*6,
+    'pred_aspect_ratios': [ [[0.66685089, 1.7073535, 0.87508774, 1.16524493, 0.49059086]] ] * 6,
 })
 
 resnet101_dcn_inter3_backbone = resnet101_backbone.copy({
@@ -825,11 +825,11 @@ yolact_resnet50_pascal_config_init = yolact_resnet50_config.copy({
 })
 
 yolact_mitb2_pascal_config_init = yolact_resnet50_config.copy({
-    'name': None,  # Will default to yolact_resnet50_pascal
+    'name': 'mix_transformer',  # Will default to yolact_resnet50_pascal
 
     # Dataset stuff
     'backbone': mit_b2_backbone.copy({
-        'pred_scales': [[32], [64], [128], [256], [512]],
+        'pred_scales': [[16], [32], [64], [128], [256], [512]],
         'use_square_anchors': False,
     }),
     'dataset': pascal_sbd_dataset,
