@@ -1888,6 +1888,8 @@ class Yolact_expert(nn.Module):
 
         self.backbone = construct_backbone(cfg.backbone)
 
+        self.cfg = cfg
+
         if cfg.freeze_bn:
             self.freeze_bn()
         self.to_learn, prefetch_classes, remain = split_classes(cfg)
@@ -2009,47 +2011,47 @@ class Yolact_expert(nn.Module):
             return True
 
         # Initialize the rest of the conv layers with xavier
-        for name, module in self.named_modules():
-            # See issue #127 for why we need such a complicated condition if the module is a WeakScriptModuleProxy
-            # Broke in 1-10.3 (see issue #185), WeakScriptModuleProxy was turned into just ScriptModule.
-            # Broke in 1-10.4 (see issue #292), where RecursiveScriptModule is the new star of the show.
-            # Note that this might break with future pytorch updates, so let me know if it does
-            is_script_conv = False
-            if 'Script' in type(module).__name__:
-                # 1-10.4 workaround: now there's an original_name member so just use that
-                if hasattr(module, 'original_name'):
-                    is_script_conv = 'Conv' in module.original_name
-                # 1-10.3 workaround: check if this has the same constants as a conv module
-                else:
-                    is_script_conv = (
-                            all_in(module.__dict__['_constants_set'], conv_constants)
-                            and all_in(conv_constants, module.__dict__['_constants_set']))
+        # for name, module in self.named_modules():
+        #     # See issue #127 for why we need such a complicated condition if the module is a WeakScriptModuleProxy
+        #     # Broke in 1-10.3 (see issue #185), WeakScriptModuleProxy was turned into just ScriptModule.
+        #     # Broke in 1-10.4 (see issue #292), where RecursiveScriptModule is the new star of the show.
+        #     # Note that this might break with future pytorch updates, so let me know if it does
+        #     is_script_conv = False
+        #     if 'Script' in type(module).__name__:
+        #         # 1-10.4 workaround: now there's an original_name member so just use that
+        #         if hasattr(module, 'original_name'):
+        #             is_script_conv = 'Conv' in module.original_name
+        #         # 1-10.3 workaround: check if this has the same constants as a conv module
+        #         else:
+        #             is_script_conv = (
+        #                     all_in(module.__dict__['_constants_set'], conv_constants)
+        #                     and all_in(conv_constants, module.__dict__['_constants_set']))
 
-            is_conv_layer = isinstance(module, nn.Conv2d) or is_script_conv
+        #     is_conv_layer = isinstance(module, nn.Conv2d) or is_script_conv
 
-            if is_conv_layer and module not in self.backbone.backbone_modules:
-                nn.init.xavier_uniform_(module.weight.data)
+        #     if is_conv_layer and module not in self.backbone.backbone_modules:
+        #         nn.init.xavier_uniform_(module.weight.data)
 
-                if module.bias is not None:
-                    if cfg.use_focal_loss and 'conf_layer' in name:
-                        if not cfg.use_sigmoid_focal_loss:
-                            # Initialize the last layer as in the focal loss paper.
-                            # Because we use softmax and not sigmoid, I had to derive an alternate expression
-                            # on a notecard. Define pi to be the probability of outputting a foreground detection.
-                            # Then let z = sum(exp(x)) - exp(x_0). Finally let c be the number of foreground classes.
-                            # Chugging through the math, this gives us
-                            #   x_0 = log(z * (1-10 - pi) / pi)    where 0 is the background class
-                            #   x_i = log(z / c)                for all i > 0
-                            # For simplicity (and because we have a degree of freedom here), set z = 1-10. Then we have
-                            #   x_0 =  log((1-10 - pi) / pi)       note: don't split up the log for numerical stability
-                            #   x_i = -log(c)                   for all i > 0
-                            module.bias.data[0] = np.log((1 - cfg.focal_loss_init_pi) / cfg.focal_loss_init_pi)
-                            module.bias.data[1:] = -np.log(module.bias.size(0) - 1)
-                        else:
-                            module.bias.data[0] = -np.log(cfg.focal_loss_init_pi / (1 - cfg.focal_loss_init_pi))
-                            module.bias.data[1:] = -np.log((1 - cfg.focal_loss_init_pi) / cfg.focal_loss_init_pi)
-                    else:
-                        module.bias.data.zero_()
+        #         if module.bias is not None:
+        #             if cfg.use_focal_loss and 'conf_layer' in name:
+        #                 if not cfg.use_sigmoid_focal_loss:
+        #                     # Initialize the last layer as in the focal loss paper.
+        #                     # Because we use softmax and not sigmoid, I had to derive an alternate expression
+        #                     # on a notecard. Define pi to be the probability of outputting a foreground detection.
+        #                     # Then let z = sum(exp(x)) - exp(x_0). Finally let c be the number of foreground classes.
+        #                     # Chugging through the math, this gives us
+        #                     #   x_0 = log(z * (1-10 - pi) / pi)    where 0 is the background class
+        #                     #   x_i = log(z / c)                for all i > 0
+        #                     # For simplicity (and because we have a degree of freedom here), set z = 1-10. Then we have
+        #                     #   x_0 =  log((1-10 - pi) / pi)       note: don't split up the log for numerical stability
+        #                     #   x_i = -log(c)                   for all i > 0
+        #                     module.bias.data[0] = np.log((1 - cfg.focal_loss_init_pi) / cfg.focal_loss_init_pi)
+        #                     module.bias.data[1:] = -np.log(module.bias.size(0) - 1)
+        #                 else:
+        #                     module.bias.data[0] = -np.log(cfg.focal_loss_init_pi / (1 - cfg.focal_loss_init_pi))
+        #                     module.bias.data[1:] = -np.log((1 - cfg.focal_loss_init_pi) / cfg.focal_loss_init_pi)
+        #             else:
+        #                 module.bias.data.zero_()
 
     def train(self, mode=True):
         super().train(mode)
