@@ -243,6 +243,8 @@ def train():
     elif args.resume == 'latest':
         args.resume = SavePath.get_latest(args.save_folder, cfg.name)
 
+    args.resume = None
+
     if args.resume is not None:
         print('Initializing weights firstly...')
         yolact_net.init_weights(backbone_path=args.save_folder + cfg.backbone.path)
