@@ -1993,7 +1993,11 @@ class Yolact_expert(nn.Module):
     def init_weights(self, backbone_path):
         """ Initialize weights for training. """
         # Initialize the backbone with the pretrained weights.
-        self.backbone.init_backbone(backbone_path)
+
+        if self.cfg.name == 'mix_transformer':
+            self.backbone.load_state_dict(torch.load(backbone_path), strict=False)
+        else:
+            self.backbone.init_backbone(backbone_path)
 
         conv_constants = getattr(nn.Conv2d(1, 1, 1), '__constants__')
 
