@@ -2075,11 +2075,17 @@ class Yolact_expert(nn.Module):
         cfg._tmp_img_w = img_w
 
         with timer.env('backbone'):
-            outs = self.backbone(x)
+            if cfg.name == 'mix_transformer':
+                outs, attn = self.backbone(x)
+            else:
+                outs = self.backbone(x)
 
         if cfg.fpn is not None:
             with timer.env('fpn'):
                 # Use backbone.selected_layers because we overwrote self.selected_layers
+                # print(outs.shape)
+                # print(cfg.backbone.selected_layers)
+                # raise RuntimeError
                 outs = [outs[i] for i in cfg.backbone.selected_layers]
                 outs = self.fpn(outs)
 
