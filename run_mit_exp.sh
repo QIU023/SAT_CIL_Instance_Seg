@@ -1,4 +1,4 @@
-DEVICES=1,2,6,7
+DEVICES=4,5,6,7
 
 # CUDA_VISIBLE_DEVICES=${DEVICES} python3 initial_train.py --config yolact_mitb2_pascal_config_init --batch_size 32 --resume interrupt
 CUDA_VISIBLE_DEVICES=${DEVICES} python3 expert_train.py --config yolact_mitb2_pascal_config_expert --batch_size 32 
