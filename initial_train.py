@@ -88,6 +88,8 @@ parser.add_argument('--batch_alloc', default=None, type=str,
 parser.add_argument('--no_autoscale', dest='autoscale', action='store_false',
                     help='YOLACT will automatically scale the lr and the number of iterations depending on the batch size. Set this if you want to disable that.')
 
+parser.add_argument('--task', default='19-1', type=str)
+
 parser.set_defaults(keep_latest=False, log=True, log_gpu=False, interrupt=True, autoscale=True)
 args = parser.parse_args()
 
@@ -273,7 +275,7 @@ def train():
             args.start_iter = SavePath.from_str(args.resume).iteration
     else:
         print('Initializing weights...')
-        # print(cfg.backbone.path, args.save_folder)
+        print(cfg.backbone.path, args.save_folder)
         # args.save_folder = ''
         yolact_net.init_weights(backbone_path=args.save_folder + cfg.backbone.path)
 
