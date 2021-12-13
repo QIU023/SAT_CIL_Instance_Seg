@@ -131,12 +131,12 @@ class SavePath:
 
     @staticmethod
     def remove_interrupt(save_folder):
-        for p in Path(save_folder).glob('*_interrupt.pth'):
+        for p in Path(save_folder).glob('*_interrupt_*.pth'):
             p.unlink()
     
     @staticmethod
     def get_interrupt(save_folder):
-        for p in Path(save_folder).glob('*_interrupt.pth'): 
+        for p in Path(save_folder).glob('*_interrupt_*.pth'): 
             return str(p)
         return None
     
