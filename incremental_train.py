@@ -308,12 +308,20 @@ def train():
     # Apparently there's a race condition with multiple GPUs, so disable it just to be safe.
     timer.disable_all()
 
+    target_id = len([item for item in os.listdir(args.save_folder) if 'interrupt' in item])
+
     args.resume = None
-    # Both of these can set args.resume to None, so do them before the check    
-    if args.resume == 'interrupt':
-        args.resume = SavePath.get_interrupt(args.save_folder)
-    elif args.resume == 'latest':
-        args.resume = SavePath.get_latest(args.save_folder, cfg.name)
+    # Both of these can set args.resume to None, so do them before the check  
+    # 
+    # 
+    print('please input the resume file id:')
+    target_id = int(input())
+
+    # if args.resume == 'interrupt':
+    #     args.resume = SavePath.get_interrupt(args.save_folder, target_id)
+
+    # elif args.resume == 'latest':
+    #     args.resume = SavePath.get_latest(args.save_folder, cfg.name)
 
     # args.resume = None
 
@@ -326,8 +334,12 @@ def train():
         # print('Resuming training,loading expert, loading {}...'.format(args.load_expert_net))
         # yolact_net.load_weights_expert(args.load_expert_net)
 
-        if args.start_iter == -1:
-            args.start_iter = SavePath.from_str(args.resume).iteration
+        if args.start_iter == -1:  
+            # begin_iter = 
+            args.start_iter = int(args.resume.split('_')[-1][:-4])
+            print('resume iteration index:', args.start_iter)
+            assert args.start_iter > 0
+
     else:
         print('Initializing weights...')
         yolact_net.init_weights(backbone_path=args.save_folder + cfg.backbone.path)
@@ -451,6 +463,7 @@ def train():
                 # all_loss = sum([v.mean() for v in losses.values()])
 
                 # Backprop
+
                 loss.backward() # Do this to free up vram even if loss is not finite
                 if torch.isfinite(loss).item():
                     optimizer.step()
