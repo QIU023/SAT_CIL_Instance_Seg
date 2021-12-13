@@ -308,14 +308,14 @@ def train():
     # Apparently there's a race condition with multiple GPUs, so disable it just to be safe.
     timer.disable_all()
 
-    target_id = len([item for item in os.listdir(args.save_folder) if 'interrupt' in item])
+    # target_id = len([item for item in os.listdir(args.save_folder) if 'interrupt' in item])
 
-    args.resume = None
+    # args.resume = None
     # Both of these can set args.resume to None, so do them before the check  
     # 
     # 
-    print('please input the resume file id:')
-    target_id = int(input())
+    # print('please input the resume file id:')
+    # target_id = int(input())
 
     # if args.resume == 'interrupt':
     #     args.resume = SavePath.get_interrupt(args.save_folder, target_id)
@@ -334,11 +334,12 @@ def train():
         # print('Resuming training,loading expert, loading {}...'.format(args.load_expert_net))
         # yolact_net.load_weights_expert(args.load_expert_net)
 
-        if args.start_iter == -1:  
+        # if args.start_iter == -1:  
             # begin_iter = 
-            args.start_iter = int(args.resume.split('_')[-1][:-4])
-            print('resume iteration index:', args.start_iter)
-            assert args.start_iter > 0
+        args.start_iter = int(args.resume.split('_')[-3])
+        print('resume iteration index:', args.start_iter)
+        assert args.start_iter > 0
+        # raise RuntimeError
 
     else:
         print('Initializing weights...')
