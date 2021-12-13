@@ -400,17 +400,17 @@ def train():
                 if iteration != args.start_iter:
                     time_avg.add(elapsed)
 
-                if iteration % 10 == 0:
-                    eta_str = \
-                    str(datetime.timedelta(seconds=(cfg.max_iter - iteration) * time_avg.get_avg())).split('.')[0]
+                # if iteration % 10 == 0:
+                eta_str = \
+                str(datetime.timedelta(seconds=(cfg.max_iter - iteration) * time_avg.get_avg())).split('.')[0]
 
-                    total = sum([loss_avgs[k].get_avg() for k in losses])
-                    # loss_labels = sum([[k, loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
-                    loss_labels = sum([[fullname[k], loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
+                total = sum([loss_avgs[k].get_avg() for k in losses])
+                # loss_labels = sum([[k, loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
+                loss_labels = sum([[fullname[k], loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
 
-                    tbar.set_description(('epoch:[%3d] iteration:%7d ||' + (
-                                ' %s: %.3f |' * len(losses)) + ' Total: %.3f || ETA: %s || timer: %.3f || lr:%.e')
-                          % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed] + [cur_lr]))
+                tbar.set_description(('epoch:[%3d] iteration:%7d ||' + (
+                            ' %s: %.3f |' * len(losses)) + ' Total: %.3f || ETA: %s || timer: %.3f || lr:%.e')
+                        % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed] + [cur_lr]))
 
                 if args.log:
                     precision = 5
