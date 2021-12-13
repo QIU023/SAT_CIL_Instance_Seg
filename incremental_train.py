@@ -314,6 +314,8 @@ def train():
     elif args.resume == 'latest':
         args.resume = SavePath.get_latest(args.save_folder, cfg.name)
 
+    args.resume = None
+
     if args.resume is not None:
         print('Initializing weights firstly...')
         yolact_net.init_weights(backbone_path=args.save_folder + cfg.backbone.path)
@@ -512,9 +514,10 @@ def train():
             print('Stopping early. Saving network...')
             
             # Delete previous copy of the interrupted network so we don't spam the weights folder
-            SavePath.remove_interrupt(args.save_folder)
-            
-            yolact_net.save_weights(save_path(epoch, repr(iteration) + '_interrupt'))
+            # SavePath.remove_interrupt(args.save_folder)
+            ckpt_num = len(os.listdir(args.save_folder))
+
+            yolact_net.save_weights(save_path(epoch, repr(iteration) + '_interrupt_'+str(ckpt_num)))
         exit()
 
     yolact_net.save_weights(save_path(epoch, iteration))
