@@ -336,7 +336,8 @@ def train():
             if (epoch + 1) * epoch_size < iteration:
                 continue
 
-            for datum in tqdm(data_loader):
+            tbar = tqdm(data_loader)
+            for datum in tbar:
                 # Stop if we've reached an epoch if we're resuming from start_iter
                 if iteration == (epoch + 1) * epoch_size:
                     break
@@ -407,9 +408,9 @@ def train():
                     # loss_labels = sum([[k, loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
                     loss_labels = sum([[fullname[k], loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
 
-                    print(('epoch:[%3d] iteration:%7d ||' + (
+                    tbar.set_description(('epoch:[%3d] iteration:%7d ||' + (
                                 ' %s: %.3f |' * len(losses)) + ' Total: %.3f || ETA: %s || timer: %.3f || lr:%.e')
-                          % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed] + [cur_lr]), flush=True)
+                          % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed] + [cur_lr]))
 
                 if args.log:
                     precision = 5
