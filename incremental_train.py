@@ -176,8 +176,8 @@ class CustomDataParallel(nn.DataParallel):
         return out
 
 if torch.cuda.is_available():
-    if args.cuda:
-        torch.set_default_tensor_type('torch.cuda.FloatTensor')
+    # if args.cuda:
+    #     torch.set_default_tensor_type('torch.cuda.FloatTensor')
     if not args.cuda:
         print("WARNING: It looks like you have a CUDA device, but aren't " +
               "using CUDA.\nRun with --cuda for optimal training speed.")
@@ -327,7 +327,8 @@ def train():
 
     if args.resume is not None:
         print('Initializing weights firstly...')
-        yolact_net.init_weights(backbone_path=args.save_folder + cfg.backbone.path)
+        pretrain_path = 'weights/mit_b2.pth'
+        yolact_net.init_weights(backbone_path=pretrain_path)
         print('Resuming training, loading {}...'.format(args.resume))
         yolact_net.load_weights(args.resume)
 
@@ -336,7 +337,7 @@ def train():
 
         # if args.start_iter == -1:  
             # begin_iter = 
-        args.start_iter = int(args.resume.split('_')[-3])
+        args.start_iter = int(args.resume.split('_')[-2])
         print('resume iteration index:', args.start_iter)
         assert args.start_iter > 0
         # raise RuntimeError
