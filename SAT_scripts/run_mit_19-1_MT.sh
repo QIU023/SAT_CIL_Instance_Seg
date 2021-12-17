@@ -10,7 +10,7 @@ exp_name='19-1_1_student_exp'
 
 CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 incremental_train.py \
     --config yolact_mitb2_pascal_config_incremental \
-    --resume weights/19+1/mix_transformer_888_47085_interrupt_0.pth \
+    --resume weights/19-1/19-1_1_student_40497_interrupt.pth \
     --batch_size 8 \
     --save_folder weights/19-1 \
     --load_expert_net weights/19-1/19-1_20expect_network.pth \
