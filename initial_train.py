@@ -145,8 +145,8 @@ fullname = {
 # loss_types = ['BoundingBox', 'ClassConfidence', 'Mask', 'P', 'Distillation', 'Expect', 'Student', 'I']
 
 if torch.cuda.is_available():
-    if args.cuda:
-        torch.set_default_tensor_type('torch.cuda.FloatTensor')
+    # if args.cuda:
+    #     torch.set_default_tensor_type('torch.cuda.FloatTensor')
     if not args.cuda:
         print("WARNING: It looks like you have a CUDA device, but aren't " +
               "using CUDA.\nRun with --cuda for optimal training speed.")
@@ -267,11 +267,13 @@ def train():
 
     if args.resume is not None:
         print('Initializing weights firstly...')
-        yolact_net.init_weights(backbone_path=args.save_folder + cfg.backbone.path)
+        pretrained_path = 'weights/mit_b2.pth'
+        yolact_net.init_weights(backbone_path=pretrained_path)
         print('Resuming training, loading {}...'.format(args.resume))
         yolact_net.load_weights(args.resume)
 
         if args.start_iter == -1:
+            # args.start_iter = 40000
             args.start_iter = SavePath.from_str(args.resume).iteration
     else:
         print('Initializing weights...')

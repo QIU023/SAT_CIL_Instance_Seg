@@ -280,7 +280,7 @@ class MultiBoxLoss(nn.Module):
         #     #targets_weighted = torch.zeros(batch_conf.shape[0]).long()
         #     #loss_c = F.cross_entropy(batch_conf, targets_weighted, reduction='none')
         #     loss_c = torch.zeros(0)
-        weight_class = torch.Tensor([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1])
+        weight_class = torch.tensor([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1]).float().cuda()
         loss_c = F.cross_entropy(conf_p, targets_weighted, weight=weight_class,reduction='none')
 
         if cfg.use_class_balanced_conf:
