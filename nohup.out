@@ -1,0 +1,42 @@
+/home/tiger/.local/lib/python3.7/site-packages/torch/jit/_recursive.py:222: UserWarning: 'lat_layers' was found in ScriptModule constants,  but it is a non-constant submodule. Consider removing it.
+  " but it is a non-constant {}. Consider removing it.".format(name, hint))
+/home/tiger/.local/lib/python3.7/site-packages/torch/jit/_recursive.py:222: UserWarning: 'pred_layers' was found in ScriptModule constants,  but it is a non-constant submodule. Consider removing it.
+  " but it is a non-constant {}. Consider removing it.".format(name, hint))
+/home/tiger/.local/lib/python3.7/site-packages/torch/jit/_recursive.py:222: UserWarning: 'downsample_layers' was found in ScriptModule constants,  but it is a non-constant submodule. Consider removing it.
+  " but it is a non-constant {}. Consider removing it.".format(name, hint))
+loading annotations into memory...
+Done (t=0.30s)
+creating index...
+index created!
+loading annotations into memory...
+Done (t=0.05s)
+creating index...
+index created!
+[0, 1, 2, 3] [64, 128, 320, 512]
+[0, 1, 2, 3, 4, 5]
+Initializing weights firstly...
+Resuming training, loading weights/15-5/mix_transformer_7_7088_interrupt.pth...
+Traceback (most recent call last):
+  File "initial_train.py", line 592, in <module>
+    train()
+  File "initial_train.py", line 273, in train
+    yolact_net.load_weights(args.resume)
+  File "/opt/tiger/occupy_arnold/SATIS/yolact.py", line 780, in load_weights
+    state_dict = torch.load(path)
+  File "/home/tiger/.local/lib/python3.7/site-packages/torch/serialization.py", line 607, in load
+    return _load(opened_zipfile, map_location, pickle_module, **pickle_load_args)
+  File "/home/tiger/.local/lib/python3.7/site-packages/torch/serialization.py", line 882, in _load
+    result = unpickler.load()
+  File "/home/tiger/.local/lib/python3.7/site-packages/torch/serialization.py", line 857, in persistent_load
+    load_tensor(data_type, size, key, _maybe_decode_ascii(location))
+  File "/home/tiger/.local/lib/python3.7/site-packages/torch/serialization.py", line 846, in load_tensor
+    loaded_storages[key] = restore_location(storage, location)
+  File "/home/tiger/.local/lib/python3.7/site-packages/torch/serialization.py", line 175, in default_restore_location
+    result = fn(storage, location)
+  File "/home/tiger/.local/lib/python3.7/site-packages/torch/serialization.py", line 157, in _cuda_deserialize
+    return obj.cuda(device)
+  File "/home/tiger/.local/lib/python3.7/site-packages/torch/_utils.py", line 79, in _cuda
+    return new_type(self.size()).copy_(self, non_blocking)
+  File "/home/tiger/.local/lib/python3.7/site-packages/torch/cuda/__init__.py", line 528, in _lazy_new
+    return super(_CudaBase, cls).__new__(cls, *args, **kwargs)
+KeyboardInterrupt
