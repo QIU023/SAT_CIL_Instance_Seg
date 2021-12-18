@@ -247,7 +247,9 @@ def train():
 
     if args.resume is not None:
         print('Initializing weights firstly...')
-        yolact_net.init_weights(backbone_path=args.save_folder + cfg.backbone.path)
+        pretrained_path = 'weights/mit_b2.pth'
+
+        yolact_net.init_weights(pretrained_path)
         print('Resuming training, loading {}...'.format(args.resume))
         yolact_net.load_weights(args.resume)
 

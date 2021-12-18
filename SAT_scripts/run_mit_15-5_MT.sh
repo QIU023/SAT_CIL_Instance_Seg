@@ -16,7 +16,7 @@ exp_name2='15-5_1_expert_exp'
 #     --save_folder weights/15-1/ \
 #     --resume weights/15-5/mix_transformer_7_7088_interrupt.pth > 'train_log/'${exp_name}'.log' 2>&1 &
 CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 expert_train.py \
-    --config yolact_mitb2_pascal_config_expert_15with5 \ 
+    --config yolact_mitb2_pascal_config_expert_15with5 \
     --batch_size 8  \
     --save_folder weights/15-5 > 'train_log/'${exp_name2}'.log' 2>&1 &
 
