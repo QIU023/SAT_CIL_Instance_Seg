@@ -1118,6 +1118,27 @@ yolact_mitb2_pascal_config_incremental_10with1 = yolact_resnet50_config.copy({
 
 })
 
+yolact_mitb2_pascal_config_init_5with3 = yolact_resnet50_config.copy({
+    'name': 'mix_transformer',  # Will default to yolact_resnet50_pascal
+
+    # Dataset stuff
+    'backbone': mit_b2_backbone.copy({
+        'pred_scales': [[16], [32], [64], [128], [256], [512]],
+        'use_square_anchors': False,
+        'path': 'mit_b2.pth',
+    }),
+    'dataset': pascal_sbd_dataset,
+    'num_classes': len(pascal_sbd_dataset.class_names) + 1,
+    'distillation': False,
+    'expert': False,
+    'total_num_classes': 21,
+    'first_num_classes': 5,
+    'extend': 0,
+    'ratio': 2,
+    'max_iter': 120000,
+    'lr_steps': (60000, 100000),
+    # 'save_folder': 'weights/5-15',
+})
 
 yolact_mitb2_pascal_config_incremental_5with3 = yolact_resnet50_config.copy({
     'name': 'mix_transformer', # Will default to yolact_resnet50_pascal
