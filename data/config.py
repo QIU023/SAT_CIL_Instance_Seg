@@ -824,6 +824,88 @@ yolact_resnet50_pascal_config_init = yolact_resnet50_config.copy({
     })
 })
 
+yolact_resnet50_pascal_config_expert = yolact_resnet50_config.copy({
+    'name': None,  # Will default to yolact_resnet50_pascal
+
+    # Dataset stuff
+    'dataset': pascal_sbd_dataset,
+    'num_classes': len(pascal_sbd_dataset.class_names) + 1,
+    'distillation': False,
+    'total_num_classes': 21,
+    'first_num_classes': 19,
+    'extend': 1,
+    'ratio': 2,
+    'max_iter': 50000,
+    'lr_steps': (30000, 40000),
+
+    'backbone': yolact_resnet50_config.backbone.copy({
+        'pred_scales': [[16], [32], [64], [128]],
+        'use_square_anchors': False,
+    })
+})
+
+yolact_resnet50_pascal_config_expert_15with5 = yolact_resnet50_config.copy({
+    'name': None,  # Will default to yolact_resnet50_pascal
+
+    # Dataset stuff
+    'dataset': pascal_sbd_dataset,
+    'num_classes': len(pascal_sbd_dataset.class_names) + 1,
+    'distillation': False,
+    'total_num_classes': 21,
+    'first_num_classes': 15,
+    'extend': 5,
+    'ratio': 2,
+    'max_iter': 50000,
+    'lr_steps': (30000, 40000),
+
+    'backbone': yolact_resnet50_config.backbone.copy({
+        'pred_scales': [[16], [32], [64], [128]],
+        'use_square_anchors': False,
+    })
+})
+
+yolact_resnet50_pascal_config_incremental_15with5 = yolact_resnet50_config.copy({
+    'name': None, # Will default to yolact_resnet50_pascal
+    
+    # Dataset stuff
+    'dataset': pascal_sbd_dataset,
+    'num_classes': len(pascal_sbd_dataset.class_names) + 1,
+    'distillation':True,
+    'expert':True,
+    'total_num_classes': 21,
+    'first_num_classes':15,
+    'extend':5,
+    'ratio': 2,
+    'max_iter': 120000,
+    'lr_steps': (60000, 100000),
+    
+    'backbone': yolact_resnet50_config.backbone.copy({
+        'pred_scales': [[32], [64], [128], [256], [512]],
+        'use_square_anchors': False,
+    })
+})
+
+yolact_resnet50_pascal_config_init_15with5 = yolact_resnet50_config.copy({
+    'name': None,  # Will default to yolact_resnet50_pascal
+
+    # Dataset stuff
+    'dataset': pascal_sbd_dataset,
+    'num_classes': len(pascal_sbd_dataset.class_names) + 1,
+    'distillation': False,
+    'expert': False,
+    'total_num_classes': 21,
+    'first_num_classes': 15,
+    'extend': 0,
+    'ratio': 2,
+    'max_iter': 120000,
+    'lr_steps': (60000, 100000),
+
+    'backbone': yolact_resnet50_config.backbone.copy({
+        'pred_scales': [[32], [64], [128], [256], [512]],
+        'use_square_anchors': False,
+    })
+})
+
 yolact_mitb2_pascal_config_init = yolact_resnet50_config.copy({
     'name': 'mix_transformer',  # Will default to yolact_resnet50_pascal
 
@@ -1187,25 +1269,7 @@ yolact_mitb2_pascal_config_incremental_5with3 = yolact_resnet50_config.copy({
 })
 
 
-yolact_resnet50_pascal_config_expert = yolact_resnet50_config.copy({
-    'name': None,  # Will default to yolact_resnet50_pascal
 
-    # Dataset stuff
-    'dataset': pascal_sbd_dataset,
-    'num_classes': len(pascal_sbd_dataset.class_names) + 1,
-    'distillation': False,
-    'total_num_classes': 21,
-    'first_num_classes': 19,
-    'extend': 1,
-    'ratio': 2,
-    'max_iter': 50000,
-    'lr_steps': (30000, 40000),
-
-    'backbone': yolact_resnet50_config.backbone.copy({
-        'pred_scales': [[16], [32], [64], [128]],
-        'use_square_anchors': False,
-    })
-})
 # ----------------------- YOLACT++ CONFIGS ----------------------- #
 
 yolact_plus_base_config = yolact_base_config.copy({
