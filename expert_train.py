@@ -130,8 +130,8 @@ if args.batch_size // torch.cuda.device_count() < 6:
 loss_types = ['B', 'C', 'M', 'P', 'D', 'E', 'S', 'I']
 
 if torch.cuda.is_available():
-    if args.cuda:
-        torch.set_default_tensor_type('torch.cuda.FloatTensor')
+    # if args.cuda:
+    #     torch.set_default_tensor_type('torch.cuda.FloatTensor')
     if not args.cuda:
         print("WARNING: It looks like you have a CUDA device, but aren't " +
               "using CUDA.\nRun with --cuda for optimal training speed.")
@@ -209,7 +209,6 @@ def train():
     #  CUDA_VISIBLE_DEVICES = [0]
     to_learn, prefetch_classes, remain = split_classes(cfg)
     dataset = COCODetection(image_path=cfg.dataset.train_images,
-
                             info_file=cfg.dataset.train_info,
                             transform=SSDAugmentation(MEANS),cfg=cfg)
 

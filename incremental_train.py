@@ -337,7 +337,7 @@ def train():
 
         # if args.start_iter == -1:  
             # begin_iter = 
-        args.start_iter = int(args.resume.split('_')[-2])
+        args.start_iter = int(args.resume[:-4].split('_')[-1])
         print('resume iteration index:', args.start_iter)
         assert args.start_iter > 0
         # raise RuntimeError
@@ -610,7 +610,7 @@ def compute_validation_loss(net, data_loader, criterion):
         
         # Don't switch to eval mode because we want to get losses
         iterations = 0
-        for datum in data_loader:
+        for datum in tqdm(data_loader):
             images, targets, masks, num_crowds = prepare_data(datum)
             out = net(images)
 
