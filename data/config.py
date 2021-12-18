@@ -845,6 +845,28 @@ yolact_mitb2_pascal_config_init = yolact_resnet50_config.copy({
     'lr_steps': (60000, 100000),
 })
 
+yolact_mitb2_pascal_config_offline = yolact_resnet50_config.copy({
+    'name': 'mix_transformer',  # Will default to yolact_resnet50_pascal
+
+    # Dataset stuff
+    'backbone': mit_b2_backbone.copy({
+        'pred_scales': [[16], [32], [64], [128], [256], [512]],
+        'use_square_anchors': False,
+        'path': 'mit_b2.pth',
+    }),
+    'dataset': pascal_sbd_dataset,
+    'num_classes': len(pascal_sbd_dataset.class_names) + 1,
+    'distillation': False,
+    'expert': False,
+    'total_num_classes': 21,
+    'first_num_classes': 20,
+    'extend': 0,
+    'ratio': 2,
+    'max_iter': 120000,
+    'lr_steps': (60000, 100000),
+})
+
+
 yolact_mitb2_pascal_config_init = yolact_resnet50_config.copy({
     'name': 'mix_transformer',  # Will default to yolact_resnet50_pascal
 
@@ -943,7 +965,7 @@ yolact_mitb2_pascal_config_expert_15with5 = yolact_resnet50_config.copy({
     'expert':True,
     'total_num_classes': 21,
     'first_num_classes':15,
-    'extend':1,
+    'extend':5,
     'ratio': 2,
     'max_iter': 50000,
     'lr_steps': (30000, 40000),
@@ -966,7 +988,7 @@ yolact_mitb2_pascal_config_incremental_15with5 = yolact_resnet50_config.copy({
     'expert':True,
     'total_num_classes': 21,
     'first_num_classes':15,
-    'extend':1,
+    'extend':5,
     'ratio': 2,
     'max_iter': 120000,
     'lr_steps': (60000, 100000),

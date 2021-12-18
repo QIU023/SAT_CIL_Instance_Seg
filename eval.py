@@ -488,6 +488,10 @@ def prep_metrics(ap_data, dets, img, gt, gt_masks, h, w, num_crowd, image_id, de
         num_pred = len(classes)
         num_gt   = len(gt_classes)
 
+        device = masks.device
+        gt_masks = gt_masks.to(device)
+        gt_boxes = gt_boxes.to(device)
+
         mask_iou_cache = _mask_iou(masks, gt_masks)
         bbox_iou_cache = _bbox_iou(boxes.float(), gt_boxes.float())
 
@@ -1065,6 +1069,8 @@ def calc_map(ap_data):
     print('Calculating mAP...')
     aps = [{'box': [], 'mask': []} for _ in iou_thresholds]
 
+    target_dict = []
+
     for _class in range(len(cfg.dataset.class_names)):
         for iou_idx in range(len(iou_thresholds)):
             for iou_type in ('box', 'mask'):
@@ -1081,6 +1087,8 @@ def calc_map(ap_data):
             for i, threshold in enumerate(iou_thresholds):
                 mAP = aps[i][iou_type][_class] * 100 if len(aps[i][iou_type]) > 0 else 0
                 all_maps[iou_type][int(threshold * 100)] = mAP
+                if threshold == 0.5 and iou_type == 'mask':
+                    target_dict.append(mAP)
             all_maps[iou_type]['all'] = (sum(all_maps[iou_type].values()) / (len(all_maps[iou_type].values()) - 1))
         print('#################### Class:', cfg.dataset.class_names[_class], '####################')
         print_maps(all_maps)
@@ -1100,6 +1108,10 @@ def calc_map(ap_data):
 
     print('#################### All Classes ####################')  # also added
     print_maps(all_maps)
+
+    print('#################### mask AP in iou thres 0.5:#######')
+    print(target_dict)
+
     return all_maps
 
 
