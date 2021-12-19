@@ -29,6 +29,8 @@ from PIL import Image
 import matplotlib.pyplot as plt
 import cv2
 
+from tqdm import tqdm
+
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1-10'):
         return True
@@ -991,7 +993,7 @@ def evaluate(net:Yolact, dataset, train_mode=False):
 
     try:
         # Main eval loop
-        for it, image_idx in enumerate(dataset_indices):
+        for it, image_idx in enumerate(tqdm(dataset_indices)):
             timer.reset()
 
             with timer.env('Load Data'):

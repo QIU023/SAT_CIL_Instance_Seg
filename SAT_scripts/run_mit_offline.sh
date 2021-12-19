@@ -11,7 +11,8 @@ exp_name='offline_exp'
 CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 initial_train.py \
     --config yolact_mitb2_pascal_config_offline \
     --batch_size 8 \
-    --save_folder weights/offline  > 'train_log/'${exp_name}'.log' 2>&1 &
+    --resume weights/offline/mix_transformer_112_120000.pth \
+    --save_folder weights/offline  > 'train_log/test_'${exp_name}'.log' 2>&1 &
 
 # CUDA_VISIBLE_DEVICES=${DEVICES} sh ./scripts/
 # SATIS/weights/19-1/19-1_1_student_40497_interrupt.pth

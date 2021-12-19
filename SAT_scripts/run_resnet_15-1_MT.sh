@@ -3,7 +3,7 @@ then
     DEVICES=$1
 fi
 
-exp_name='15-1_0_student_exp'
+exp_name='resnet_15-1_0_student_exp'
 
 CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 initial_train.py \
     --config yolact_resnet50_pascal_config_init_15with5 \
