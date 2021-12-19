@@ -187,11 +187,13 @@ class CustomDataParallel(nn.DataParallel):
 
 def split_classes(cfg):
     first_num_classes = cfg.first_num_classes
+    # for i in range(cfg.step):
+    #     first_num_classes += 
     if cfg.extend != 0:
         first_num_classes += cfg.extend
     # FIXME loader!
 
-    total_number = 20
+    total_number = cfg.total_num_classes - 1
 
     original = list(range(total_number + 1))
     to_learn = list(range(first_num_classes + 1))
