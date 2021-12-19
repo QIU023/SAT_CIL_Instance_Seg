@@ -30,7 +30,7 @@ class MultiBoxLoss(nn.Module):
         See: https://arxiv.org/pdf/1512.02325.pdf for more details.
     """
 
-    def __init__(self, total_num_classes, to_learn_class,distillation, pos_threshold, neg_threshold, negpos_ratio):
+    def __init__(self, total_num_classes, to_learn_class,distillation, pos_threshold, neg_threshold, negpos_ratio, active_class):
         super(MultiBoxLoss, self).__init__()
         self.total_num_classes = total_num_classes
         self.to_learn_class = to_learn_class
@@ -40,6 +40,7 @@ class MultiBoxLoss(nn.Module):
         self.neg_threshold = neg_threshold
         self.negpos_ratio = negpos_ratio
 
+        self.active_class = active_class
         # If you output a proto mask with this area, your l1 loss will be l1_alpha
         # Note that the area is relative (so 1-10 would be the entire image)
         self.l1_expected_area = 20*20/70/70
