@@ -24,6 +24,7 @@ import datetime
 # Oof
 import eval as eval_script
 
+from tqdm import tqdm
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1-10")
@@ -318,7 +319,8 @@ def train():
             if (epoch + 1) * epoch_size < iteration:
                 continue
 
-            for datum in data_loader:
+            tbar = tqdm(data_loader)
+            for datum in tbar:
                 # Stop if we've reached an epoch if we're resuming from start_iter
                 if iteration == (epoch + 1) * epoch_size:
                     break
@@ -381,16 +383,16 @@ def train():
                 if iteration != args.start_iter:
                     time_avg.add(elapsed)
 
-                if iteration % 10 == 0:
-                    eta_str = \
-                    str(datetime.timedelta(seconds=(cfg.max_iter - iteration) * time_avg.get_avg())).split('.')[0]
+                # if iteration % 10 == 0:
+                eta_str = \
+                str(datetime.timedelta(seconds=(cfg.max_iter - iteration) * time_avg.get_avg())).split('.')[0]
 
-                    total = sum([loss_avgs[k].get_avg() for k in losses])
-                    loss_labels = sum([[k, loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
+                total = sum([loss_avgs[k].get_avg() for k in losses])
+                loss_labels = sum([[k, loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
 
-                    print(('[%3d] %7d ||' + (
-                                ' %s: %.3f |' * len(losses)) + ' T: %.3f || ETA: %s || timer: %.3f || lr:%.e')
-                          % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed] + [cur_lr]), flush=True)
+                tbar.set_description(('[%3d] %7d ||' + (
+                            ' %s: %.3f |' * len(losses)) + ' T: %.3f || ETA: %s || timer: %.3f || lr:%.e')
+                        % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed] + [cur_lr]))
 
                 if args.log:
                     precision = 5
