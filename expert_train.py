@@ -34,6 +34,7 @@ parser = argparse.ArgumentParser(
     description='Yolact Training Script')
 parser.add_argument('--batch_size', default=8, type=int,
                     help='Batch size for training')
+parser.add_argument('--step', default=0, type=int)
 parser.add_argument('--resume', default='', type=str,
                     help='Checkpoint state_dict file to resume training from. If this is "interrupt"' \
                          ', the model will resume training from the interrupt file.')
@@ -87,11 +88,12 @@ parser.add_argument('--batch_alloc', default=None, type=str,
 parser.add_argument('--no_autoscale', dest='autoscale', action='store_false',
                     help='YOLACT will automatically scale the lr and the number of iterations depending on the batch size. Set this if you want to disable that.')
 
-parser.set_defaults(keep_latest=False, log=True, log_gpu=False, interrupt=True, autoscale=True)
+parser.set_defaults(keep_latest=False, log=False, log_gpu=False, interrupt=True, autoscale=True)
 args = parser.parse_args()
 
 if args.config is not None:
     set_cfg(args.config)
+    cfg.step = args.step
 
 if args.dataset is not None:
     set_dataset(args.dataset)
@@ -196,13 +198,14 @@ def split_classes(cfg):
     original = list(range(total_number + 1))
     learned_class = []
     if 'expert' not in cfg.name:
-        learned_class = list(range(first_num_classes))
-    current_learn_class = list(range(first_num_classes, first_num_classes+learn_num_per_step))
+        learned_class = list(range(first_num_classes+1))
+    current_learn_class = list(range(first_num_classes+1, 1+first_num_classes+learn_num_per_step))
     remaining = list(range(current_learn_class[-1]+1, total_number+1))
     
     print(f'learning class: {current_learn_class}, previous learned class: {learned_class}, remain: {remaining} not learned!')
 
     return current_learn_class, learned_class, remaining
+
     # to_learn = list(range(first_num_classes + 1))
     # remaining = [i for i in original if i not in to_learn]
     # if cfg.extend != 0:

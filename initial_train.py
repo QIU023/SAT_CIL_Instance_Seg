@@ -90,7 +90,7 @@ parser.add_argument('--no_autoscale', dest='autoscale', action='store_false',
 
 parser.add_argument('--task', default='19-1', type=str)
 
-parser.set_defaults(keep_latest=False, log=True, log_gpu=False, interrupt=True, autoscale=True)
+parser.set_defaults(keep_latest=False, log=False, log_gpu=False, interrupt=True, autoscale=True)
 args = parser.parse_args()
 
 if args.config is not None:
@@ -209,8 +209,8 @@ def split_classes(cfg):
     original = list(range(total_number + 1))
     learned_class = []
     if 'expert' not in cfg.name:
-        learned_class = list(range(first_num_classes))
-    current_learn_class = list(range(first_num_classes, first_num_classes+learn_num_per_step))
+        learned_class = list(range(first_num_classes+1))
+    current_learn_class = list(range(first_num_classes+1, 1+first_num_classes+learn_num_per_step))
     remaining = list(range(current_learn_class[-1]+1, total_number+1))
     
     print(f'learning class: {current_learn_class}, previous learned class: {learned_class}, remain: {remaining} not learned!')

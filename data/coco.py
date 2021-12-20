@@ -113,8 +113,8 @@ def split_classes(cfg):
     original = list(range(total_number + 1))
     learned_class = []
     if 'expert' not in cfg.name:
-        learned_class = list(range(first_num_classes))
-    current_learn_class = list(range(first_num_classes, first_num_classes+learn_num_per_step))
+        learned_class = list(range(first_num_classes+1))
+    current_learn_class = list(range(first_num_classes+1, 1+first_num_classes+learn_num_per_step))
     remaining = list(range(current_learn_class[-1]+1, total_number+1))
     
     print(f'learning class: {current_learn_class}, previous learned class: {learned_class}, remain: {remaining} not learned!')
