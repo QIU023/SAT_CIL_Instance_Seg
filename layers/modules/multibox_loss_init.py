@@ -242,7 +242,7 @@ class MultiBoxLoss_init(nn.Module):
                 for obj_idx in range(downsampled_masks.size(0)):
                     segment_t[cur_class_t[obj_idx]] = torch.max(segment_t[cur_class_t[obj_idx]],
                                                                 downsampled_masks[obj_idx])
-
+            
             loss_s += F.binary_cross_entropy_with_logits(cur_segment, segment_t, reduction='sum')
 
         return loss_s / mask_h / mask_w * cfg.semantic_segmentation_alpha
