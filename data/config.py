@@ -685,7 +685,7 @@ yolact_base_config = coco_base_config.copy({
     'name': 'yolact_base',
 
     # Dataset stuff
-    'dataset': coco2014_dataset,
+    'dataset': coco2017_dataset,
     'total_num_classes': 21,
     'first_num_classes':1,
     'extend':0,
@@ -1076,6 +1076,7 @@ yolact_mitb2_pascal_config_init_15with5 = yolact_resnet50_config.copy({
     'expert': False,
     'total_num_classes': 21,
     'first_num_classes': 15,
+    'task': '15-5',
     'extend': 0,
     'ratio': 2,
     'max_iter': 120000,
@@ -1097,6 +1098,7 @@ yolact_mitb2_pascal_config_expert_15with5 = yolact_resnet50_config.copy({
     'ratio': 2,
     'max_iter': 50000,
     'lr_steps': (30000, 40000),
+    'task': '15-5',
     # 'save_folder': 'weights/16to20',
 
     'backbone': mit_b2_backbone.copy({
@@ -1118,6 +1120,7 @@ yolact_mitb2_pascal_config_incremental_15with5 = yolact_resnet50_config.copy({
     'first_num_classes':15,
     'extend':5,
     'ratio': 2,
+    'task': '15-5',
     'max_iter': 120000,
     'lr_steps': (60000, 100000),
     # 'save_folder': 'weights/15+5',
@@ -1147,6 +1150,7 @@ yolact_mitb2_pascal_config_init_15with1 = yolact_resnet50_config.copy({
     'first_num_classes': 15,
     'extend': 0,
     'ratio': 2,
+    'task': '15-1',
     'max_iter': 120000,
     'lr_steps': (60000, 100000),
     # 'save_folder': 'weights/5-15',
@@ -1166,6 +1170,7 @@ yolact_mitb2_pascal_config_expert_15with1 = yolact_resnet50_config.copy({
     'ratio': 2,
     'max_iter': 50000,
     'lr_steps': (30000, 40000),
+    'task': '15-1',
     # 'save_folder': 'weights/16to20',
 
     'backbone': mit_b2_backbone.copy({
@@ -1189,6 +1194,7 @@ yolact_mitb2_pascal_config_incremental_15with1 = yolact_resnet50_config.copy({
     'ratio': 2,
     'max_iter': 120000,
     'lr_steps': (60000, 100000),
+    'task': '15-1',
     # 'save_folder': 'weights/15+5',
     
     'backbone': mit_b2_backbone.copy({
@@ -1214,6 +1220,7 @@ yolact_mitb2_pascal_config_init_10with1 = yolact_resnet50_config.copy({
     'expert': False,
     'total_num_classes': 21,
     'first_num_classes': 10,
+    'task': '10-1',
     'extend': 0,
     'ratio': 2,
     'max_iter': 120000,
@@ -1235,6 +1242,7 @@ yolact_mitb2_pascal_config_expert_10with1 = yolact_resnet50_config.copy({
     'ratio': 2,
     'max_iter': 50000,
     'lr_steps': (30000, 40000),
+    'task': '10-1',
     # 'save_folder': 'weights/16to20',
 
     'backbone': mit_b2_backbone.copy({
@@ -1258,6 +1266,7 @@ yolact_mitb2_pascal_config_incremental_10with1 = yolact_resnet50_config.copy({
     'ratio': 2,
     'max_iter': 120000,
     'lr_steps': (60000, 100000),
+    'task': '10-1',
     # 'save_folder': 'weights/15+5',
     
     'backbone': mit_b2_backbone.copy({
@@ -1283,6 +1292,7 @@ yolact_mitb2_pascal_config_init_5with3 = yolact_resnet50_config.copy({
     'expert': False,
     'total_num_classes': 21,
     'first_num_classes': 5,
+    'task': '5-3',
     'extend': 0,
     'ratio': 2,
     'max_iter': 120000,
@@ -1300,6 +1310,7 @@ yolact_mitb2_pascal_config_incremental_5with3 = yolact_resnet50_config.copy({
     'expert':True,
     'total_num_classes': 21,
     'first_num_classes':5,
+    'task': '5-3',
     'extend':1,
     'ratio': 2,
     'max_iter': 120000,
