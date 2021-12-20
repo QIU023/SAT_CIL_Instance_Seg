@@ -30,7 +30,7 @@ class MultiBoxLoss(nn.Module):
         See: https://arxiv.org/pdf/1512.02325.pdf for more details.
     """
 
-    def __init__(self, total_num_classes, to_learn_class,distillation, pos_threshold, neg_threshold, negpos_ratio, active_class):
+    def __init__(self, total_num_classes, to_learn_class,distillation, pos_threshold, neg_threshold, negpos_ratio):
         super(MultiBoxLoss, self).__init__()
         self.total_num_classes = total_num_classes
         self.to_learn_class = to_learn_class
