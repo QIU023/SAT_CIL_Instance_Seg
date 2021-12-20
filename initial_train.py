@@ -36,6 +36,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--batch_size', default=8, type=int,
                     help='Batch size for training')
 parser.add_argument('--step', default=0, type=int)
+parser.add_argument('--task', default='19-1', type=str)
 parser.add_argument('--resume', default=None, type=str,
                     help='Checkpoint state_dict file to resume training from. If this is "interrupt"' \
                          ', the model will resume training from the interrupt file.')
@@ -203,11 +204,13 @@ class CustomDataParallel(nn.DataParallel):
 
 def split_classes(cfg):
     first_num_classes = cfg.first_num_classes
-    if cfg.extend != 0:
-        first_num_classes += cfg.extend
-    # FIXME loader!
+    learn_num_per_step = int(cfg.task.split('-')[1])
+    cfg.extend = 0
+    for i in range(cfg.step):
+        first_num_classes += learn_num_per_step
+        cfg.extend += learn_num_per_step
 
-    total_number = 20
+    total_number = cfg.total_num_classes - 1
 
     original = list(range(total_number + 1))
     to_learn = list(range(first_num_classes + 1))
@@ -217,8 +220,30 @@ def split_classes(cfg):
         prefetch_cats = to_learn[-prefetch_cats:]
     else:
         prefetch_cats = to_learn
+    # print(to_learn, prefetch_cats, remaining)
+    # raise RuntimeError
     return to_learn, prefetch_cats, remaining
 
+# def split_classes(cfg):
+#     first_num_classes = cfg.first_num_classes
+#     learn_num_per_step = int(cfg.task.split('-')[1])
+#     cfg.extend = 0
+#     for i in range(cfg.step):
+#         first_num_classes += learn_num_per_step
+#         cfg.extend += learn_num_per_step
+
+#     total_number = cfg.total_num_classes - 1
+#     # to_learn
+#     original = list(range(total_number + 1))
+#     learned_class = []
+#     if 'expert' not in cfg.name:
+#         learned_class = list(range(first_num_classes+1))
+#     current_learn_class = list(range(first_num_classes+1, 1+first_num_classes+learn_num_per_step))
+#     remaining = list(range(current_learn_class[-1]+1, total_number+1))
+    
+#     print(f'learning class: {current_learn_class}, previous learned class: {learned_class}, remain: {remaining} not learned!')
+
+#     return current_learn_class, learned_class, remaining
 
 def train():
     if not os.path.exists(args.save_folder):
@@ -226,7 +251,6 @@ def train():
     CUDA_VISIBLE_DEVICES = '1'
     to_learn, prefetch_classes, remain = split_classes(cfg)
     dataset = COCODetection(image_path=cfg.dataset.train_images,
-
                             info_file=cfg.dataset.train_info,
                             transform=SSDAugmentation(MEANS),cfg=cfg)
 

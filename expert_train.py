@@ -35,6 +35,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('--batch_size', default=8, type=int,
                     help='Batch size for training')
 parser.add_argument('--step', default=0, type=int)
+parser.add_argument('--task', default='19-1', type=str)
 parser.add_argument('--resume', default='', type=str,
                     help='Checkpoint state_dict file to resume training from. If this is "interrupt"' \
                          ', the model will resume training from the interrupt file.')
@@ -94,6 +95,7 @@ args = parser.parse_args()
 if args.config is not None:
     set_cfg(args.config)
     cfg.step = args.step
+    cfg.task = args.task
 
 if args.dataset is not None:
     set_dataset(args.dataset)
@@ -190,21 +192,22 @@ class CustomDataParallel(nn.DataParallel):
 def split_classes(cfg):
     first_num_classes = cfg.first_num_classes
     learn_num_per_step = int(cfg.task.split('-')[1])
+    cfg.extend = 0
     for i in range(cfg.step):
         first_num_classes += learn_num_per_step
+        cfg.extend += learn_num_per_step
 
     total_number = cfg.total_num_classes - 1
-    # to_learn
-    original = list(range(total_number + 1))
-    learned_class = []
-    if 'expert' not in cfg.name:
-        learned_class = list(range(first_num_classes+1))
-    current_learn_class = list(range(first_num_classes+1, 1+first_num_classes+learn_num_per_step))
-    remaining = list(range(current_learn_class[-1]+1, total_number+1))
-    
-    print(f'learning class: {current_learn_class}, previous learned class: {learned_class}, remain: {remaining} not learned!')
 
-    return current_learn_class, learned_class, remaining
+    original = list(range(total_number + 1))
+    to_learn = list(range(first_num_classes + 1))
+    remaining = [i for i in original if i not in to_learn]
+    if cfg.extend != 0:
+        prefetch_cats = cfg.extend
+        prefetch_cats = to_learn[-prefetch_cats:]
+    else:
+        prefetch_cats = to_learn
+    return to_learn, prefetch_cats, remaining
 
     # to_learn = list(range(first_num_classes + 1))
     # remaining = [i for i in original if i not in to_learn]
