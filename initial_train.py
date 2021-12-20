@@ -91,12 +91,13 @@ parser.add_argument('--no_autoscale', dest='autoscale', action='store_false',
 
 parser.add_argument('--task', default='19-1', type=str)
 
-parser.set_defaults(keep_latest=False, log=True, log_gpu=False, interrupt=True, autoscale=True)
+parser.set_defaults(keep_latest=False, log=False, log_gpu=False, interrupt=True, autoscale=True)
 args = parser.parse_args()
 
 if args.config is not None:
     set_cfg(args.config)
     cfg.step = args.step
+
 
 if args.dataset is not None:
     set_dataset(args.dataset)
