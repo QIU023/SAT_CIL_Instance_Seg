@@ -149,6 +149,8 @@ class COCODetection(data.Dataset):
         self.total_ids = self.coco.getImgIds()
         cur_anns = self.coco.anns
 
+        # prefetch_classes = list(range(21))
+
         cur_list = prefetch_classes
         self.cur_classes = [i - 1 for i in cur_list]
         self.cur_classes = [i for i in self.cur_classes if i >= 0]

@@ -40,7 +40,8 @@ class MultiBoxLoss(nn.Module):
         self.neg_threshold = neg_threshold
         self.negpos_ratio = negpos_ratio
 
-        # self.active_class = active_class
+        self.active_class = list(range(16, 21))
+        # self.active_class = list(range(6,9))
         # If you output a proto mask with this area, your l1 loss will be l1_alpha
         # Note that the area is relative (so 1-10 would be the entire image)
         self.l1_expected_area = 20*20/70/70
@@ -283,12 +284,13 @@ class MultiBoxLoss(nn.Module):
         #     loss_c = torch.zeros(0)
 
         weight_class = torch.tensor([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]).float().cuda()
-        for c in self.to_learn_class:
+        for c in self.active_class:
             weight_class[c] = 1
         
         # print(weight_class)
         # raise RuntimeError
-        print(torch.unique(targets_weighted))
+        # print(torch.unique(targets_weighted))
+        # print(conf_p.shape)
 
         loss_c = F.cross_entropy(conf_p, targets_weighted, weight=weight_class,reduction='none')
 

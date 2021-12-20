@@ -1,3 +1,5 @@
+
+from torch.utils.data import dataloader
 from data import *
 from utils.augmentations import SSDAugmentation, BaseTransform
 from utils.functions import MovingAverage, SavePath
@@ -26,6 +28,7 @@ import eval as eval_script
 
 from tqdm import tqdm
 
+
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1-10")
 
@@ -34,8 +37,8 @@ parser = argparse.ArgumentParser(
     description='Yolact Training Script')
 parser.add_argument('--batch_size', default=8, type=int,
                     help='Batch size for training')
-parser.add_argument('--step', default=0, type=int)
 parser.add_argument('--task', default='19-1', type=str)
+parser.add_argument('--step', default=0, type=int)
 parser.add_argument('--resume', default='', type=str,
                     help='Checkpoint state_dict file to resume training from. If this is "interrupt"' \
                          ', the model will resume training from the interrupt file.')
@@ -96,6 +99,7 @@ if args.config is not None:
     set_cfg(args.config)
     cfg.step = args.step
     cfg.task = args.task
+    # args.logs
 
 if args.dataset is not None:
     set_dataset(args.dataset)
@@ -191,13 +195,11 @@ class CustomDataParallel(nn.DataParallel):
 
 def split_classes(cfg):
     first_num_classes = cfg.first_num_classes
-    learn_num_per_step = int(cfg.task.split('-')[1])
-    cfg.extend = 0
-    for i in range(cfg.step):
-        first_num_classes += learn_num_per_step
-        cfg.extend += learn_num_per_step
+    if cfg.extend != 0:
+        first_num_classes += cfg.extend
+    # FIXME loader!
 
-    total_number = cfg.total_num_classes - 1
+    total_number = 20
 
     original = list(range(total_number + 1))
     to_learn = list(range(first_num_classes + 1))
@@ -209,19 +211,6 @@ def split_classes(cfg):
         prefetch_cats = to_learn
     return to_learn, prefetch_cats, remaining
 
-    # to_learn = list(range(first_num_classes + 1))
-    # remaining = [i for i in original if i not in to_learn]
-    # if cfg.extend != 0:
-    #     prefetch_cats = cfg.extend
-    #     prefetch_cats = to_learn[-prefetch_cats:]
-    # else:
-    #     prefetch_cats = to_learn
-
-    # print(to_learn, prefetch_cats, remaining)
-    # raise RuntimeError
-
-    # return to_learn, prefetch_cats, remaining
-
 
 def train():
     if not os.path.exists(args.save_folder):
@@ -229,6 +218,7 @@ def train():
     #  CUDA_VISIBLE_DEVICES = [0]
     to_learn, prefetch_classes, remain = split_classes(cfg)
     dataset = COCODetection(image_path=cfg.dataset.train_images,
+
                             info_file=cfg.dataset.train_info,
                             transform=SSDAugmentation(MEANS),cfg=cfg)
 
@@ -264,11 +254,10 @@ def train():
 
     args.resume = None
 
+    pretrained_path = 'weights/mit_b2.pth'
     if args.resume is not None:
         print('Initializing weights firstly...')
-        pretrained_path = 'weights/mit_b2.pth'
-
-        yolact_net.init_weights(pretrained_path)
+        yolact_net.init_weights(backbone_path=pretrained_path)
         print('Resuming training, loading {}...'.format(args.resume))
         yolact_net.load_weights(args.resume)
 
@@ -276,8 +265,7 @@ def train():
             args.start_iter = SavePath.from_str(args.resume).iteration
     else:
         print('Initializing weights...')
-        pretrained_path = 'weights/mit_b2.pth'
-        yolact_net.init_weights(pretrained_path)
+        yolact_net.init_weights(backbone_path=pretrained_path)
 
     optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum,
                           weight_decay=args.decay)
@@ -338,7 +326,7 @@ def train():
             if (epoch + 1) * epoch_size < iteration:
                 continue
 
-            tbar = tqdm(data_loader)
+            tbar = tqdm(dataloader)
             for datum in tbar:
                 # Stop if we've reached an epoch if we're resuming from start_iter
                 if iteration == (epoch + 1) * epoch_size:
@@ -411,7 +399,7 @@ def train():
 
                 tbar.set_description(('[%3d] %7d ||' + (
                             ' %s: %.3f |' * len(losses)) + ' T: %.3f || ETA: %s || timer: %.3f || lr:%.e')
-                        % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed] + [cur_lr]))
+                        % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed] + [cur_lr]), flush=True)
 
                 if args.log:
                     precision = 5
