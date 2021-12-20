@@ -326,7 +326,7 @@ def train():
             if (epoch + 1) * epoch_size < iteration:
                 continue
 
-            tbar = tqdm(dataloader)
+            tbar = tqdm(data_loader)
             for datum in tbar:
                 # Stop if we've reached an epoch if we're resuming from start_iter
                 if iteration == (epoch + 1) * epoch_size:
