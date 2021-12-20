@@ -96,6 +96,7 @@ args = parser.parse_args()
 
 if args.config is not None:
     set_cfg(args.config)
+    cfg.step = args.step
 
 if args.dataset is not None:
     set_dataset(args.dataset)
