@@ -41,7 +41,7 @@ parser = argparse.ArgumentParser(
     description='Yolact Training Script')
 parser.add_argument('--batch_size', default=8, type=int,
                     help='Batch size for training')
-
+parser.add_argument('--step', default=0, type=int)
 parser.add_argument('--start_iter', default=0, type=int,
                     help='Resume training at this iter. If this is -1-10, the iteration will be'\
                          'determined from the file name.')

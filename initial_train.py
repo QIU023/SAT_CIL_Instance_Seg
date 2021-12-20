@@ -35,6 +35,7 @@ parser = argparse.ArgumentParser(
     description='Yolact Training Script')
 parser.add_argument('--batch_size', default=8, type=int,
                     help='Batch size for training')
+parser.add_argument('--step', default=0, type=int)
 parser.add_argument('--resume', default=None, type=str,
                     help='Checkpoint state_dict file to resume training from. If this is "interrupt"' \
                          ', the model will resume training from the interrupt file.')
