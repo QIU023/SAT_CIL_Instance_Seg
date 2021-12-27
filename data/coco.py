@@ -403,57 +403,15 @@ class COCODetection_test(data.Dataset):
         # Do this here because we have too many things named COCO
         from pycocotools.coco import COCO
 
-        # if target_transform is None:
-        #     target_transform = COCOAnnotationTransform()
-        # cur_list_total = []
-        # self.root = image_path
-        # self.coco = COCO(info_file)
-        # # self.bbox_mask_res = self.coco.loadRes('results/bbox_mask_detections.json')
-        # self.total_ids = self.coco.getImgIds()
-        # cur_anns = self.coco.anns
-        # cur_list = [20]
-        # self.cur_classes = [i - 1 for i in cur_list]
-        # # pre_list = [1,2,3,4,5,6,7,8,9,10]
-        # for i in cur_list:
-        #     for key, value in cur_anns.items():
-        #         if value['category_id'] == i:
-        #             cur_list_total.append(value['image_id'])
-        #
-        # self.ids_cur = list(set(cur_list_total))
-        #
-        # self.ids = self.ids_cur
-        # # self.ids = list(self.coco.imgToAnns.keys())
-        # if len(self.ids) == 0 or not has_gt:
-        #     self.ids = list(self.coco.imgs.keys())
-
         if target_transform is None:
             target_transform = COCOAnnotationTransform()
         self.prefetch_classes = prefetch_classes
 
         self.select_classes_cats = []
         self.select_classes_ids = []
-        # for i in self.prefetch_classes:
-        #     #  print(i)
-        #     if i != 0:
-        #         select_classes_cat = COCO_CLASSES[i - 1-10]
-        #         self.select_classes_cats.append(select_classes_cat)
-        #         select_classes_id = COCO_LABEL_MAP[i]
-        #         self.select_classes_ids.append(select_classes_id - 1-10)
 
         self.root = image_path
         self.coco = COCO(info_file)
-        # self.total_ids = self.coco.getImgIds()
-        # catIds = self.coco.getCatIds(self.select_classes_cats)
-        # self.ids = self.coco.getImgIds(self.total_ids, catIds)
-        # list_total = []
-        # self.root = image_path
-        # self.coco = COCO(info_file)
-        # self.total_ids = self.coco.getImgIds()
-        # anns = self.coco.anns
-        # for key, value in anns.items():
-        #     if value['category_id'] == 1:
-        #         list_total.append(value['image_id'])
-        # self.ids = list_total
 
         self.ids = list(self.coco.imgToAnns.keys())
 

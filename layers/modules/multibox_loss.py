@@ -287,8 +287,8 @@ class MultiBoxLoss(nn.Module):
         for c in self.active_class:
             weight_class[c] = 1
         
-        print(weight_class)
-        raise RuntimeError
+        # print(weight_class)
+        # raise RuntimeError
         # print(torch.unique(targets_weighted))
         # print(conf_p.shape)
 

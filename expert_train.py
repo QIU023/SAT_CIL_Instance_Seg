@@ -252,7 +252,7 @@ def train():
     elif args.resume == 'latest':
         args.resume = SavePath.get_latest(args.save_folder, cfg.name)
 
-    args.resume = None
+    # args.resume = None
 
     pretrained_path = 'weights/mit_b2.pth'
     if args.resume is not None:
@@ -262,7 +262,8 @@ def train():
         yolact_net.load_weights(args.resume)
 
         if args.start_iter == -1:
-            args.start_iter = SavePath.from_str(args.resume).iteration
+            # args.start_iter = SavePath.from_str(args.resume).iteration
+            args.start_iter = 50000
     else:
         print('Initializing weights...')
         yolact_net.init_weights(backbone_path=pretrained_path)
@@ -399,7 +400,7 @@ def train():
 
                 tbar.set_description(('[%3d] %7d ||' + (
                             ' %s: %.3f |' * len(losses)) + ' T: %.3f || ETA: %s || timer: %.3f || lr:%.e')
-                        % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed] + [cur_lr]), flush=True)
+                        % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed] + [cur_lr]))
 
                 if args.log:
                     precision = 5
