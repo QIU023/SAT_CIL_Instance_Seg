@@ -24,6 +24,8 @@ import datetime
 # Oof
 import eval as eval_script
 
+from layers.modules.split_classes_func import split_classes as real_split_classes
+
 from tqdm import tqdm
 # from modules.segformer_offical.mix_transformer import mit_b2
 

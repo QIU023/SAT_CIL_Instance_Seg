@@ -329,7 +329,7 @@ def train():
     # elif args.resume == 'latest':
     #     args.resume = SavePath.get_latest(args.save_folder, cfg.name)
 
-    # args.resume = None
+    args.resume = None
 
     if args.resume is not None:
         print('Initializing weights firstly...')
@@ -350,7 +350,8 @@ def train():
 
     else:
         print('Initializing weights...')
-        yolact_net.init_weights(backbone_path=args.save_folder + cfg.backbone.path)
+        pretrain_path = 'weights/mit_b2.pth'
+        yolact_net.init_weights(backbone_path=pretrain_path)
 
     optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum,
                           weight_decay=args.decay)
