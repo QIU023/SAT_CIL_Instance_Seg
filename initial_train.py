@@ -204,28 +204,6 @@ class CustomDataParallel(nn.DataParallel):
         return out
 
 
-def split_classes(cfg):
-    first_num_classes = cfg.first_num_classes
-    learn_num_per_step = int(cfg.task.split('-')[1])
-    cfg.extend = 0
-    for i in range(cfg.step):
-        first_num_classes += learn_num_per_step
-        cfg.extend += learn_num_per_step
-
-    total_number = cfg.total_num_classes - 1
-
-    original = list(range(total_number + 1))
-    to_learn = list(range(first_num_classes + 1))
-    remaining = [i for i in original if i not in to_learn]
-    if cfg.extend != 0:
-        prefetch_cats = cfg.extend
-        prefetch_cats = to_learn[-prefetch_cats:]
-    else:
-        prefetch_cats = to_learn
-    # print(to_learn, prefetch_cats, remaining)
-    # raise RuntimeError
-    return to_learn, prefetch_cats, remaining
-
 # def split_classes(cfg):
 #     first_num_classes = cfg.first_num_classes
 #     learn_num_per_step = int(cfg.task.split('-')[1])
@@ -235,17 +213,37 @@ def split_classes(cfg):
 #         cfg.extend += learn_num_per_step
 
 #     total_number = cfg.total_num_classes - 1
-#     # to_learn
-#     original = list(range(total_number + 1))
-#     learned_class = []
-#     if 'expert' not in cfg.name:
-#         learned_class = list(range(first_num_classes+1))
-#     current_learn_class = list(range(first_num_classes+1, 1+first_num_classes+learn_num_per_step))
-#     remaining = list(range(current_learn_class[-1]+1, total_number+1))
-    
-#     print(f'learning class: {current_learn_class}, previous learned class: {learned_class}, remain: {remaining} not learned!')
 
-#     return current_learn_class, learned_class, remaining
+#     original = list(range(total_number + 1))
+#     to_learn = list(range(first_num_classes + 1))
+#     remaining = [i for i in original if i not in to_learn]
+#     if cfg.extend != 0:
+#         prefetch_cats = cfg.extend
+#         prefetch_cats = to_learn[-prefetch_cats:]
+#     else:
+#         prefetch_cats = to_learn
+#     # print(to_learn, prefetch_cats, remaining)
+#     # raise RuntimeError
+#     return to_learn, prefetch_cats, remaining
+
+def split_classes(cfg):
+    first_num_classes = cfg.first_num_classes
+    if cfg.extend != 0:
+        first_num_classes += cfg.extend
+    # FIXME loader!
+
+    total_number = 20
+
+    original = list(range(total_number + 1))
+    to_learn = list(range(first_num_classes + 1))
+    remaining = [i for i in original if i not in to_learn]
+    if cfg.extend != 0:
+        prefetch_cats = cfg.extend
+        prefetch_cats = to_learn[-prefetch_cats:]
+    else:
+        prefetch_cats = to_learn
+    return to_learn, prefetch_cats, remaining
+
 
 def train():
     if not os.path.exists(args.save_folder):
@@ -302,8 +300,8 @@ def train():
         yolact_net.load_weights(args.resume)
 
         if args.start_iter == -1:
-            # args.start_iter = 40000
-            args.start_iter = SavePath.from_str(args.resume).iteration
+            args.start_iter = 120000
+            # args.start_iter = SavePath.from_str(args.resume).iteration
     else:
         print('Initializing weights...')
         # print(cfg.backbone.path, args.save_folder)
@@ -490,7 +488,7 @@ def train():
             yolact_net.save_weights(save_path(epoch, repr(iteration) + '_interrupt'))
         exit()
 
-    yolact_net.save_weights(save_path(epoch, iteration))
+    # yolact_net.save_weights(save_path(epoch, iteration))
 
 
 def set_lr(optimizer, new_lr):

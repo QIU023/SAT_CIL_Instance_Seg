@@ -542,7 +542,7 @@ def train():
             yolact_net.save_weights(save_path(epoch, repr(iteration) + '_interrupt_'+str(ckpt_num)))
         exit()
 
-    yolact_net.save_weights(save_path(epoch, iteration))
+    # yolact_net.save_weights(save_path(epoch, iteration))
 
 
 def set_lr(optimizer, new_lr):

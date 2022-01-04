@@ -443,7 +443,7 @@ fpn_base = Config({
 # ----------------------- CONFIG DEFAULTS ----------------------- #
 
 coco_base_config = Config({
-    'dataset': coco2014_dataset,
+    'dataset': coco2017_dataset,
     'num_classes': 81, # This should include the background class
 
     'max_iter': 400000,
@@ -732,6 +732,27 @@ yolact_base_config = coco_base_config.copy({
     'crowd_iou_threshold': 0.7,
 
     'use_semantic_segmentation_loss': True,
+})
+
+yolact_mitb2_coco_config_offline = yolact_base_config.copy({
+    'name': 'mix_transformer',  # Will default to yolact_resnet50_pascal
+
+    # Dataset stuff
+    'backbone': mit_b2_backbone.copy({
+        'pred_scales': [[16], [32], [64], [128], [256], [512]],
+        'use_square_anchors': False,
+        'path': 'mit_b2.pth',
+    }),
+    # 'dataset': pascal_sbd_dataset,
+    # 'num_classes': len(pascal_sbd_dataset.class_names) + 1,
+    'distillation': False,
+    'expert': False,
+    # 'total_num_classes': 21,
+    # 'first_num_classes': 20,
+    'extend': 0,
+    'ratio': 2,
+    # 'max_iter': 120000,
+    # 'lr_steps': (60000, 100000),
 })
 
 yolact_im400_config = yolact_base_config.copy({
