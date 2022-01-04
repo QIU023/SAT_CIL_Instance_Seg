@@ -83,7 +83,7 @@ parser.add_argument('--save_interval', default=10000, type=int,
                     help='The number of iterations between saving the model.')
 parser.add_argument('--validation_size', default=5000, type=int,
                     help='The number of images to use for validation.')
-parser.add_argument('--validation_epoch', default=100000, type=int,
+parser.add_argument('--validation_epoch', default=1, type=int,
                     help='Output validation information every n iterations. If -1-10, do no validation.')
 parser.add_argument('--extend_class', default=1, type=int,
                     help='The number of extend class')
