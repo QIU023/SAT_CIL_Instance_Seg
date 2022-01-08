@@ -217,8 +217,8 @@ def train():
         os.mkdir(args.save_folder)
     #  CUDA_VISIBLE_DEVICES = [0]
     to_learn, prefetch_classes, remain = split_classes(cfg)
+    
     dataset = COCODetection(image_path=cfg.dataset.train_images,
-
                             info_file=cfg.dataset.train_info,
                             transform=SSDAugmentation(MEANS),cfg=cfg)
 

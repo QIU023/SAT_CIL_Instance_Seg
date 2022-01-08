@@ -195,10 +195,8 @@ class NetLoss(nn.Module):
     A wrapper for running the network and computing the loss
     This is so we can more efficiently use DataParallel.
     """
-    
 
-
-    def __init__(self, net:Yolact,sub_net,expert_net,criterion,criterion_dis,criterion_expert):
+    def __init__(self, net=None,sub_net=None,expert_net=None,criterion=None,criterion_dis=None,criterion_expert=None):
         super().__init__()
 
         self.net = net
@@ -208,15 +206,62 @@ class NetLoss(nn.Module):
         self.criterion_dis = criterion_dis
         self.criterion_expert = criterion_expert
     def forward(self, images, targets, masks, num_crowds):
+        
         preds,preds_extend,proto = self.net(images,sub=False)
         preds_sub,proto_sub = self.sub_net(images,sub=True)
-        preds_expert, proto_expert = self.expert(images, sub=False)
+        
         losses = self.criterion(self.net, preds_extend, targets, masks, num_crowds)
-        losses_expert = self.criterion_expert(self.net,preds_expert,preds_extend,proto,proto_expert,targets,masks,num_crowds)
         losses_dis = self.criterion_dis(self.net, preds_sub, preds,proto,proto_sub, targets, masks, num_crowds)
         losses['D'] = losses_dis
-        losses['E'] = losses_expert
+        
+        if self.expert is not None:
+            preds_expert, proto_expert = self.expert(images, sub=False)
+            losses_expert = self.criterion_expert(self.net,preds_expert,preds_extend,proto,proto_expert,targets,masks,num_crowds)
+            losses['E'] = losses_expert
+
         return losses
+
+class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
+    def __init__(self, instance_mask_region=True):
+        self.instance_mask_region = instance_mask_region
+        self.scale_MiT = [128,64,32,16]
+        self.reduction_MiT = [8,4,2,1]
+        self.heads_MiT = [2,3,5,8]
+
+    def forward(self, old_network_SelfAttention_arr, new_network_SelfAttention_arr, instance_mask, bbox):
+        for ii in range(4):
+            old_network_SelfAttention = old_network_SelfAttention_arr[ii]
+            new_network_SelfAttention = new_network_SelfAttention_arr[ii]
+            assert old_network_SelfAttention.shape == new_network_SelfAttention.shape, \
+                f"old network:{old_network_SelfAttention.shape} and new network:{new_network_SelfAttention.shape} have different shape Self-Attention Tensor!!!!"
+            
+            Bs, Heads, L, L_1 = old_network_SelfAttention.shape
+            # _, InstanceNum, H, W = ins
+            # asize = int(math.sqrt(L))
+            # assert
+            
+            _, H, W = instance_mask[0].shape
+            # assert L == H * W, "input shape  "
+            old_network_SelfAttention = old_network_SelfAttention.permute(0, 2, 1, 3)
+            old_network_SelfAttention = old_network_SelfAttention.view(Bs, H, W, Heads, L_1)
+            
+            new_network_SelfAttention = new_network_SelfAttention.permute(0, 2, 1, 3)
+            new_network_SelfAttention = new_network_SelfAttention.view(Bs, H, W, Heads, L_1)
+
+            if self.instance_mask_region:
+                # batch_size = instance_mask.shape[0]
+                
+                for i, instance_img_mask in enumerate(instance_mask):
+                    old_img_SelfAttention = old_network_SelfAttention[i]
+                    new_img_SelfAttention = new_network_SelfAttention[i]
+                    for instance in instance_img_mask:
+                        old_mean_SelfAttention = old_img_SelfAttention[instance].mean(dim=0)
+                        new_mean_SelfAttention = new_img_SelfAttention[instance].mean(dim=0)
+                        for hs in range(Heads):
+                            old_hs_SA = old_mean_SelfAttention[hs]
+                            new_hs_SA = new_mean_SelfAttention[hs]
+
+
 
 
 class CustomDataParallel(nn.DataParallel):
@@ -329,7 +374,7 @@ def train():
     # elif args.resume == 'latest':
     #     args.resume = SavePath.get_latest(args.save_folder, cfg.name)
 
-    args.resume = None
+    # args.resume = None
 
     if args.resume is not None:
         print('Initializing weights firstly...')
@@ -495,7 +540,7 @@ def train():
                 total = sum([loss_avgs[k].get_avg() for k in losses])
                 loss_labels = sum([[fullname[k], loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
                 
-                tbar.set_description(('[%3d] %7d ||' + (' %s: %.3f |' * len(losses)) + ' T: %.3f || ETA: %s || timer: %.3f || lr:%.e')
+                tbar.set_description(('[%3d] %7d ||' + (' %s: %.3f |' * len(losses)) + ' T: %.3f || ETA: %s || timer: %.3f || lr:%.3f')
                         % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed] + [cur_lr]))
 
                 if args.log:
