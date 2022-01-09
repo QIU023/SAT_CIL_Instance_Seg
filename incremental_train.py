@@ -490,7 +490,8 @@ def train():
                              distillation = args.distillation,
                              pos_threshold=cfg.positive_iou_threshold,
                              neg_threshold=cfg.negative_iou_threshold,
-                             negpos_ratio=cfg.ohem_negpos_ratio)
+                             negpos_ratio=cfg.ohem_negpos_ratio,
+                             is_expert_range=None)
 
     criterion_dis = None
     criterion_expert = None

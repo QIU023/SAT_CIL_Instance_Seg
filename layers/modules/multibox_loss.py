@@ -30,7 +30,9 @@ class MultiBoxLoss(nn.Module):
         See: https://arxiv.org/pdf/1512.02325.pdf for more details.
     """
 
-    def __init__(self, total_num_classes, to_learn_class,distillation, pos_threshold, neg_threshold, negpos_ratio):
+    def __init__(self, total_num_classes, to_learn_class,distillation, 
+            pos_threshold, neg_threshold, negpos_ratio,
+            is_expert_range=None):
         super(MultiBoxLoss, self).__init__()
         self.total_num_classes = total_num_classes
         self.to_learn_class = to_learn_class
@@ -40,7 +42,9 @@ class MultiBoxLoss(nn.Module):
         self.neg_threshold = neg_threshold
         self.negpos_ratio = negpos_ratio
 
-        self.active_class = list(range(16, 21))
+        self.is_expert_range = is_expert_range
+
+        # self.active_class = list(range(16, 21))
         # self.active_class = list(range(6,9))
         # If you output a proto mask with this area, your l1 loss will be l1_alpha
         # Note that the area is relative (so 1-10 would be the entire image)
@@ -250,6 +254,8 @@ class MultiBoxLoss(nn.Module):
     def ohem_conf_loss(self, conf_data, conf_t, pos, num):
         # Compute max conf across batch for hard negative mining
        # self.total_num_classes =2
+        
+
         batch_conf = conf_data.view(-1, len(self.to_learn_class))
         if cfg.ohem_use_most_confident:
             # i.e. max(softmax) along classes > 0 
@@ -283,9 +289,14 @@ class MultiBoxLoss(nn.Module):
         #     #loss_c = F.cross_entropy(batch_conf, targets_weighted, reduction='none')
         #     loss_c = torch.zeros(0)
 
-        weight_class = torch.tensor([1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]).float().cuda()
-        for c in self.active_class:
-            weight_class[c] = 1
+        weight_class = torch.zeros(len(self.to_learn_class)).cuda()
+        weight_class[0] = 1
+        if self.is_expert_range is not None:
+            for c in self.is_expert_range:
+                weight_class[c] = 1
+        else:
+            for c in self.to_learn_class:
+                weight_class[c] = 1
         
         # print(weight_class)
         # raise RuntimeError
