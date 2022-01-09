@@ -732,6 +732,8 @@ yolact_base_config = coco_base_config.copy({
     'crowd_iou_threshold': 0.7,
 
     'use_semantic_segmentation_loss': True,
+
+    'loss_type': 'MT_loss'
 })
 
 yolact_mitb2_coco_config_offline = yolact_base_config.copy({
@@ -884,6 +886,7 @@ yolact_resnet50_pascal_config_expert_15with5 = yolact_resnet50_config.copy({
         'use_square_anchors': False,
     })
 })
+
 
 yolact_resnet50_pascal_config_incremental_15with5 = yolact_resnet50_config.copy({
     'name': None, # Will default to yolact_resnet50_pascal
@@ -1137,6 +1140,33 @@ yolact_mitb2_pascal_config_incremental_15with5 = yolact_resnet50_config.copy({
     'num_classes': len(pascal_sbd_dataset.class_names) + 1,
     'distillation':True,
     'expert':True,
+    'total_num_classes': 21,
+    'first_num_classes':15,
+    'extend':5,
+    'ratio': 2,
+    'task': '15-5',
+    'max_iter': 120000,
+    'lr_steps': (60000, 100000),
+    # 'save_folder': 'weights/15+5',
+    
+    'backbone': mit_b2_backbone.copy({
+        'pred_scales': [[16], [32], [64], [128], [256], [512]],
+        'use_square_anchors': False,
+        'path': 'mit_b2.pth',
+    }),
+
+})
+
+SAT_yolact_mitb2_pascal_config_incremental_15with5 = yolact_resnet50_config.copy({
+    'name': 'mix_transformer', # Will default to yolact_resnet50_pascal
+    
+    # Dataset stuff
+    'dataset': pascal_sbd_dataset,
+    'num_classes': len(pascal_sbd_dataset.class_names) + 1,
+    'distillation':True,
+    # 'expert':True,
+    'loss_type':'SAT_loss',
+
     'total_num_classes': 21,
     'first_num_classes':15,
     'extend':5,

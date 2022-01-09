@@ -31,7 +31,10 @@ import datetime
 import eval as eval_script
 
 from tqdm import tqdm
+from torchvision.transforms import functional as Ftrans
+from torchvision.transforms import InterpolationMode
 
+import torch.nn.functional as F
 
 def str2bool(v):
     return v.lower() in ("yes", "true", "t", "1-10")
@@ -196,8 +199,10 @@ class NetLoss(nn.Module):
     This is so we can more efficiently use DataParallel.
     """
 
-    def __init__(self, net=None,sub_net=None,expert_net=None,criterion=None,criterion_dis=None,criterion_expert=None):
-        super().__init__()
+    def __init__(self, net=None,sub_net=None,expert_net=None,
+        criterion=None,criterion_dis=None,
+        criterion_expert=None,criterion_SAT=None):
+        super(NetLoss, self).__init__()
 
         self.net = net
         self.sub_net = sub_net
@@ -205,19 +210,26 @@ class NetLoss(nn.Module):
         self.expert = expert_net
         self.criterion_dis = criterion_dis
         self.criterion_expert = criterion_expert
+        self.criterion_SAT = criterion_SAT
     def forward(self, images, targets, masks, num_crowds):
         
-        preds,preds_extend,proto = self.net(images,sub=False)
-        preds_sub,proto_sub = self.sub_net(images,sub=True)
+        preds,preds_extend,proto, selfattention = self.net(images,sub=False)
+        preds_sub,proto_sub, selfattention_sub = self.sub_net(images,sub=True)
         
         losses = self.criterion(self.net, preds_extend, targets, masks, num_crowds)
-        losses_dis = self.criterion_dis(self.net, preds_sub, preds,proto,proto_sub, targets, masks, num_crowds)
-        losses['D'] = losses_dis
+
+        if self.criterion_dis is not None:
+            losses_dis = self.criterion_dis(self.net, preds_sub, preds,proto,proto_sub, targets, masks, num_crowds)
+            losses['D'] = losses_dis
         
         if self.expert is not None:
             preds_expert, proto_expert = self.expert(images, sub=False)
             losses_expert = self.criterion_expert(self.net,preds_expert,preds_extend,proto,proto_expert,targets,masks,num_crowds)
             losses['E'] = losses_expert
+
+        if self.criterion_SAT is not None:
+            losses_SAT = self.criterion_SAT(selfattention_sub, selfattention, targets, None)
+            losses['SAT'] = losses_SAT
 
         return losses
 
@@ -229,39 +241,74 @@ class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
         self.heads_MiT = [2,3,5,8]
 
     def forward(self, old_network_SelfAttention_arr, new_network_SelfAttention_arr, instance_mask, bbox):
+        scale_SA_loss = 0.
+        # loss = 0.
+
         for ii in range(4):
             old_network_SelfAttention = old_network_SelfAttention_arr[ii]
             new_network_SelfAttention = new_network_SelfAttention_arr[ii]
             assert old_network_SelfAttention.shape == new_network_SelfAttention.shape, \
                 f"old network:{old_network_SelfAttention.shape} and new network:{new_network_SelfAttention.shape} have different shape Self-Attention Tensor!!!!"
             
-            Bs, Heads, L, L_1 = old_network_SelfAttention.shape
-            # _, InstanceNum, H, W = ins
-            # asize = int(math.sqrt(L))
-            # assert
-            
-            _, H, W = instance_mask[0].shape
+#                     resized_labels.append(sc_arr)
+            # resize_label = torch.stack(resize_label, dim=0).cuda()
+
+            # _, H, W = instance_mask[0].shape
             # assert L == H * W, "input shape  "
             old_network_SelfAttention = old_network_SelfAttention.permute(0, 2, 1, 3)
-            old_network_SelfAttention = old_network_SelfAttention.view(Bs, H, W, Heads, L_1)
+            old_network_SelfAttention = old_network_SelfAttention.view(Bs, sc, sc, Heads, L_1)
             
             new_network_SelfAttention = new_network_SelfAttention.permute(0, 2, 1, 3)
-            new_network_SelfAttention = new_network_SelfAttention.view(Bs, H, W, Heads, L_1)
+            new_network_SelfAttention = new_network_SelfAttention.view(Bs, sc, sc, Heads, L_1)
 
-            if self.instance_mask_region:
+            # loss = 0.
+            if self.instance_mask_region:           # using instance mask to do Region Pooling!
+
+                Bs, Heads, L, L_1 = old_network_SelfAttention.shape
+                sc = self.scale_MiT[ii]
+                resize_label = []
+                for j in range(Bs):
+                    lbl = Ftrans.to_pil_image(instance_mask[j].cpu().numpy().astype(np.uint8))
+                    instance_num = instance_mask[j].shape[0]
+                    resize_instance_mask_j = []
+                    for jj in range(instance_num):
+                        lbl = Ftrans.resize(lbl, (sc,sc), InterpolationMode.NEAREST)
+                        lbl = torch.from_numpy(np.array(lbl))
+                        resize_instance_mask_j.append(lbl)
+                    resize_instance_mask_j = torch.stack(resize_instance_mask_j, dim=0)
+                    resize_label.append(resize_instance_mask_j)
                 # batch_size = instance_mask.shape[0]
-                
-                for i, instance_img_mask in enumerate(instance_mask):
+                batch_SA_loss = 0.
+                for i, instance_img_mask in enumerate(resize_label):
                     old_img_SelfAttention = old_network_SelfAttention[i]
                     new_img_SelfAttention = new_network_SelfAttention[i]
+                    
+                    img_SA_loss = 0.
                     for instance in instance_img_mask:
                         old_mean_SelfAttention = old_img_SelfAttention[instance].mean(dim=0)
                         new_mean_SelfAttention = new_img_SelfAttention[instance].mean(dim=0)
+
+                        ins_SA_loss = 0.
                         for hs in range(Heads):
                             old_hs_SA = old_mean_SelfAttention[hs]
                             new_hs_SA = new_mean_SelfAttention[hs]
+                            
+                            old_hs_SA = F.normalize(old_hs_SA, p=2)
+                            new_hs_SA = F.normalize(new_hs_SA, p=2)
 
-
+                            hs_SA_loss = torch.frobenius_norm(old_hs_SA-new_hs_SA)
+                            ins_SA_loss += hs_SA_loss
+                        ins_SA_loss /= Heads
+                        img_SA_loss += ins_SA_loss
+                    img_SA_loss /= instance_img_mask.shape[0]
+                    batch_SA_loss += img_SA_loss
+                batch_SA_loss /= Bs
+                scale_SA_loss += batch_SA_loss
+            else:
+                pass
+            
+        scale_SA_loss /= 4
+        return scale_SA_loss
 
 
 class CustomDataParallel(nn.DataParallel):
@@ -407,19 +454,29 @@ def train():
                              neg_threshold=cfg.negative_iou_threshold,
                              negpos_ratio=cfg.ohem_negpos_ratio)
 
-    criterion_dis = MultiBoxLoss_dis(total_num_classes=cfg.total_num_classes,
-                             to_learn_class=to_learn,
-                             distillation=args.distillation,
-                             pos_threshold=cfg.positive_iou_threshold,
-                             neg_threshold=cfg.negative_iou_threshold,
-                             negpos_ratio=cfg.ohem_negpos_ratio)
+    criterion_dis = None
+    criterion_expert = None
+    criterion_SAT = None
+    if cfg.loss_type != 'SAT_loss':
+        criterion_dis = MultiBoxLoss_dis(total_num_classes=cfg.total_num_classes,
+                                to_learn_class=to_learn,
+                                distillation=args.distillation,
+                                pos_threshold=cfg.positive_iou_threshold,
+                                neg_threshold=cfg.negative_iou_threshold,
+                                negpos_ratio=cfg.ohem_negpos_ratio)
 
-    criterion_expert = MultiBoxLoss_expert(total_num_classes=cfg.total_num_classes,
-                             to_learn_class=to_learn,
-                             distillation=args.distillation,
-                             pos_threshold=cfg.positive_iou_threshold,
-                             neg_threshold=cfg.negative_iou_threshold,
-                             negpos_ratio=cfg.ohem_negpos_ratio)
+        criterion_expert = MultiBoxLoss_expert(total_num_classes=cfg.total_num_classes,
+                                to_learn_class=to_learn,
+                                distillation=args.distillation,
+                                pos_threshold=cfg.positive_iou_threshold,
+                                neg_threshold=cfg.negative_iou_threshold,
+                                negpos_ratio=cfg.ohem_negpos_ratio)
+
+    # if cfg.loss_type == 'SAT_loss':
+    else:
+        criterion_SAT = Self_Attention_Transfer_InstanceSeg_Loss(True)
+
+
     if args.batch_alloc is not None:
         args.batch_alloc = [int(x) for x in args.batch_alloc.split(',')]
         if sum(args.batch_alloc) != args.batch_size:
@@ -428,7 +485,7 @@ def train():
 
     #net = CustomDataParallel(NetLoss(net,sub_net, criterion,criterion_dis))
 
-    net = CustomDataParallel(NetLoss(net, sub_net, expert_net, criterion, criterion_dis,criterion_expert))
+    net = CustomDataParallel(NetLoss(net, sub_net, expert_net, criterion, criterion_dis,criterion_expert,criterion_SAT))
    # net = NetLoss(net, criterion)
     if args.cuda:
         net = net.cuda()
