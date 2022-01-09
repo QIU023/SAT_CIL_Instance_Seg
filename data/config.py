@@ -1166,6 +1166,7 @@ SAT_yolact_mitb2_pascal_config_incremental_15with5 = yolact_resnet50_config.copy
     'distillation':True,
     'expert':False,
     'loss_type':'SAT_loss',
+    'max_size':512,
 
     'total_num_classes': 21,
     'first_num_classes':15,

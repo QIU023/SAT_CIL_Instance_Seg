@@ -1000,8 +1000,12 @@ class Yolact(nn.Module):
                 pred_outs['segm'] = self.semantic_seg_conv(outs[0])
                 pred_outs_extend['segm'] = self.semantic_seg_conv(outs[0])
             if sub == False:
+                if self.return_self_attention:
+                    return pred_outs, pred_outs_extend, proto_dis, attn
                 return pred_outs, pred_outs_extend, proto_dis
             else:
+                if self.return_self_attention:
+                    return pred_outs, proto_dis, attn
                 return pred_outs, proto_dis
         else:
             if cfg.use_mask_scoring:
@@ -1033,8 +1037,7 @@ class Yolact(nn.Module):
                     pred_outs_extend['conf_extend'] = F.softmax(
                         pred_outs_extend['conf_extend'][:, :, :len(self.to_learn)], -1)
 
-            if self.return_self_attention:
-                return self.detect(pred_outs, pred_outs_extend, self), attn
+            # if self.return_self_attention:
             return self.detect(pred_outs, pred_outs_extend, self)
 
 

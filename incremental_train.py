@@ -151,7 +151,7 @@ if args.batch_size // torch.cuda.device_count() < 6:
         print('Per-GPU batch size is less than the recommended limit for batch norm. Disabling batch norm.')
     cfg.freeze_bn = True
 
-loss_types = ['B', 'C', 'M', 'P', 'D', 'E', 'S', 'I']
+loss_types = ['B', 'C', 'M', 'P', 'D', 'E', 'S', 'I', 'SAT']
 fullname = {
     'B': 'Box',
     'C': 'Class',
@@ -160,7 +160,8 @@ fullname = {
     'D': 'Distill',
     'E': 'Expect',
     'S': 'Student',
-    'I': 'I'
+    'I': 'I',
+    'SAT': "Self-Attention Transfer"
 }
 # loss_types = ['BoundingBox', 'ClassConfidence', 'Mask', 'P', 'Distillation', 'Expect', 'Student', 'I']
 
@@ -215,14 +216,16 @@ class NetLoss(nn.Module):
         self.criterion_dis = criterion_dis
         self.criterion_expert = criterion_expert
         self.criterion_SAT = criterion_SAT
+        self.SAT_weight = 20
+
     def forward(self, images, targets, masks, num_crowds):
         # print(type(self.net(images, sub=False)))
         # for item in self.net(images, sub=False):
         #     print(item.shape)
-        detect, selfattention = self.net(images,sub=False)
-        (preds,preds_extend,proto) = detect
-        sub_detect, selfattention_sub = self.sub_net(images,sub=True)
-        (preds_sub,proto_sub) = sub_detect
+        preds,preds_extend,proto, selfattention = self.net(images,sub=False)
+        # (preds,preds_extend,proto) = detect
+        preds_sub,proto_sub, selfattention_sub = self.sub_net(images,sub=True)
+        # (preds_sub,proto_sub) = sub_detect
 
         losses = self.criterion(self.net, preds_extend, targets, masks, num_crowds)
 
@@ -236,7 +239,7 @@ class NetLoss(nn.Module):
             losses['E'] = losses_expert
 
         if self.criterion_SAT is not None:
-            losses_SAT = self.criterion_SAT(selfattention_sub, selfattention, targets, None)
+            losses_SAT = self.SAT_weight*self.criterion_SAT(selfattention_sub, selfattention, masks, None)
             losses['SAT'] = losses_SAT
 
         return losses
@@ -262,9 +265,12 @@ class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
             
 #                     resized_labels.append(sc_arr)
             # resize_label = torch.stack(resize_label, dim=0).cuda()
-
+            # print(instance_mask.shape)
             # _, H, W = instance_mask[0].shape
             # assert L == H * W, "input shape  "
+            Bs, Heads, L, L_1 = old_network_SelfAttention.shape
+            sc = self.scale_MiT[ii]
+            
             old_network_SelfAttention = old_network_SelfAttention.permute(0, 2, 1, 3)
             old_network_SelfAttention = old_network_SelfAttention.view(Bs, sc, sc, Heads, L_1)
             
@@ -273,28 +279,29 @@ class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
 
             # loss = 0.
             if self.instance_mask_region:           # using instance mask to do Region Pooling!
-
-                Bs, Heads, L, L_1 = old_network_SelfAttention.shape
-                sc = self.scale_MiT[ii]
-                resize_label = []
-                for j in range(Bs):
-                    lbl = Ftrans.to_pil_image(instance_mask[j].cpu().numpy().astype(np.uint8))
-                    instance_num = instance_mask[j].shape[0]
-                    resize_instance_mask_j = []
-                    for jj in range(instance_num):
-                        lbl = Ftrans.resize(lbl, (sc,sc), InterpolationMode.NEAREST)
-                        lbl = torch.from_numpy(np.array(lbl))
-                        resize_instance_mask_j.append(lbl)
-                    resize_instance_mask_j = torch.stack(resize_instance_mask_j, dim=0)
-                    resize_label.append(resize_instance_mask_j)
-                # batch_size = instance_mask.shape[0]
+                # resize_label = []
                 batch_SA_loss = 0.
-                for i, instance_img_mask in enumerate(resize_label):
-                    old_img_SelfAttention = old_network_SelfAttention[i]
-                    new_img_SelfAttention = new_network_SelfAttention[i]
+                for j in range(Bs):
+                    resize_instance_mask_j = []
+                    instance_num = instance_mask[j].shape[0]
+
+                    instance_img_mask = instance_mask[j]
+                    old_img_SelfAttention = old_network_SelfAttention[j]
+                    new_img_SelfAttention = new_network_SelfAttention[j]
                     
                     img_SA_loss = 0.
-                    for instance in instance_img_mask:
+                    for jj in range(instance_num):
+                    # print(instance_mask[j].max(), instance_mask[j].min())
+                        lbl_jj = Ftrans.to_pil_image(instance_mask[j][jj].cpu().numpy().astype(np.uint8))
+                        lbl_jj = Ftrans.resize(lbl_jj, (sc,sc), InterpolationMode.NEAREST)
+                        instance = torch.from_numpy(np.array(lbl_jj)).bool()
+                    #     resize_instance_mask_j.append(lbl_jj)
+                    # resize_instance_mask_j = torch.stack(resize_instance_mask_j, dim=0)
+                    # resize_label.append(resize_instance_mask_j)
+                    # batch_size = instance_mask.shape[0]
+                    # for i, instance_img_mask in enumerate(resize_label):
+
+                    # for instance in instance_img_mask:
                         old_mean_SelfAttention = old_img_SelfAttention[instance].mean(dim=0)
                         new_mean_SelfAttention = new_img_SelfAttention[instance].mean(dim=0)
 
@@ -302,9 +309,10 @@ class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
                         for hs in range(Heads):
                             old_hs_SA = old_mean_SelfAttention[hs]
                             new_hs_SA = new_mean_SelfAttention[hs]
+                            # print(old_hs_SA.shape)
                             
-                            old_hs_SA = F.normalize(old_hs_SA, p=2)
-                            new_hs_SA = F.normalize(new_hs_SA, p=2)
+                            old_hs_SA = F.normalize(old_hs_SA, p=2, dim=0)
+                            new_hs_SA = F.normalize(new_hs_SA, p=2, dim=0)
 
                             hs_SA_loss = torch.frobenius_norm(old_hs_SA-new_hs_SA)
                             ins_SA_loss += hs_SA_loss
@@ -345,25 +353,44 @@ class CustomDataParallel(nn.DataParallel):
         return out
 
 
+# def split_classes(cfg):
+#     first_num_classes = cfg.first_num_classes
+#     learn_num_per_step = int(cfg.task.split('-')[1])
+#     for i in range(cfg.step):
+#         first_num_classes += learn_num_per_step
+
+#     total_number = cfg.total_num_classes - 1
+#     # to_learn
+#     original = list(range(total_number + 1))
+#     learned_class = []
+#     if 'expert' not in cfg.name:
+#         learned_class = list(range(first_num_classes+1))
+#     current_learn_class = list(range(first_num_classes+1, 1+first_num_classes+learn_num_per_step))
+#     remaining = list(range(current_learn_class[-1]+1, total_number+1))
+    
+#     print(f'learning class: {current_learn_class}, previous learned class: {learned_class}, remain: {remaining} not learned!')
+
+#     return current_learn_class, learned_class, remaining
+
+
 def split_classes(cfg):
     first_num_classes = cfg.first_num_classes
-    learn_num_per_step = int(cfg.task.split('-')[1])
-    for i in range(cfg.step):
-        first_num_classes += learn_num_per_step
+    if cfg.extend != 0:
+        first_num_classes += cfg.extend
+    # FIXME loader!
 
-    total_number = cfg.total_num_classes - 1
-    # to_learn
+    total_number = 20
+
     original = list(range(total_number + 1))
-    learned_class = []
-    if 'expert' not in cfg.name:
-        learned_class = list(range(first_num_classes+1))
-    current_learn_class = list(range(first_num_classes+1, 1+first_num_classes+learn_num_per_step))
-    remaining = list(range(current_learn_class[-1]+1, total_number+1))
-    
-    print(f'learning class: {current_learn_class}, previous learned class: {learned_class}, remain: {remaining} not learned!')
-
-    return current_learn_class, learned_class, remaining
-
+    to_learn = list(range(first_num_classes + 1))
+    remaining = [i for i in original if i not in to_learn]
+    if cfg.extend != 0:
+        prefetch_cats = cfg.extend
+        prefetch_cats = to_learn[-prefetch_cats:]
+    else:
+        prefetch_cats = to_learn
+    print(f'total learned or learning class: {to_learn}, \n incremental class: {prefetch_cats}, \n remain: {remaining} not learned!')
+    return to_learn, prefetch_cats, remaining
 
 def train():
     if not os.path.exists(args.save_folder):

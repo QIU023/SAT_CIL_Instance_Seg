@@ -290,7 +290,7 @@ class MultiBoxLoss(nn.Module):
         # print(weight_class)
         # raise RuntimeError
         # print(torch.unique(targets_weighted))
-        # print(conf_p.shape)
+        # print(conf_p.shape, targets_weighted.shape)
 
         loss_c = F.cross_entropy(conf_p, targets_weighted, weight=weight_class,reduction='none')
 
