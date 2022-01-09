@@ -960,7 +960,7 @@ def evaluate(net:Yolact, dataset, train_mode=False):
     dataset_size = len(dataset) if args.max_images < 0 else min(args.max_images, len(dataset))
     progress_bar = ProgressBar(30, dataset_size)
 
-    print()
+    # print()
 
     if not args.display and not args.benchmark:
         # For each class and iou, stores tuples (score, isPositive)

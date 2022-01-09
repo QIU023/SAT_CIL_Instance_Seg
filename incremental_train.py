@@ -86,7 +86,7 @@ parser.add_argument('--save_interval', default=10000, type=int,
                     help='The number of iterations between saving the model.')
 parser.add_argument('--validation_size', default=5000, type=int,
                     help='The number of images to use for validation.')
-parser.add_argument('--validation_epoch', default=1, type=int,
+parser.add_argument('--validation_epoch', default=10, type=int,
                     help='Output validation information every n iterations. If -1-10, do no validation.')
 parser.add_argument('--extend_class', default=1, type=int,
                     help='The number of extend class')
@@ -552,7 +552,7 @@ def train():
                                   pin_memory=True)
     
     
-    save_path = lambda epoch, iteration: SavePath(cfg.name, epoch, iteration).get_path(root=args.save_folder)
+    save_path = lambda epoch, iteration, prefix=None: SavePath(cfg.name, epoch, iteration, prefix).get_path(root=args.save_folder)
     time_avg = MovingAverage()
 
     global loss_types # Forms the print order
@@ -560,6 +560,7 @@ def train():
 
     print('Begin training!')
     print()
+    best_mask_AP = 0.
     # try-except so you can use ctrl+c to save early and stop training
     try:
         for epoch in range(num_epochs):
@@ -660,20 +661,23 @@ def train():
                         latest = SavePath.get_latest(args.save_folder, cfg.name)
 
                     print('Saving state, iter:', iteration)
-                    yolact_net.save_weights(save_path(epoch, iteration))
+                    yolact_net.save_weights(save_path(epoch, iteration, 'latest'))
 
-                    if args.keep_latest and latest is not None:
-                        if args.keep_latest_interval <= 0 or iteration % args.keep_latest_interval != args.save_interval:
-                            print('Deleting old save...')
-                            os.remove(latest)
+                #     if args.keep_latest and latest is not None:
+                #         if args.keep_latest_interval <= 0 or iteration % args.keep_latest_interval != args.save_interval:
+                #             print('Deleting old save...')
+                #             os.remove(latest)
             
             # This is done per epoch
             if args.validation_epoch > 0:
                 if epoch % args.validation_epoch == 0 and epoch > 0:
-                    compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
-        
+                    val_info = compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
+                    if val_info['mask'][0.5] > best_mask_AP:
+                        best_mask_AP = val_info['mask'][0.5]
+                        yolact_net.save_weights(save_path(epoch, iteration, 'best'))
+
         # Compute validation mAP after training is finished
-        compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
+        # compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
     except KeyboardInterrupt:
         if args.interrupt:
             print('Stopping early. Saving network...')
@@ -799,6 +803,7 @@ def compute_validation_map(epoch, iteration, yolact_net, dataset, log:Log=None):
             log.log('val', val_info, elapsed=(end - start), epoch=epoch, iter=iteration)
 
         yolact_net.train()
+    return val_info
 
 def setup_eval():
     eval_script.parse_args(['--no_bar', '--max_images='+str(args.validation_size)])

@@ -808,7 +808,7 @@ class Yolact(nn.Module):
         """ Initialize weights for training. """
         # Initialize the backbone with the pretrained weights.
 
-        if self.cfg.name == 'mix_transformer':
+        if self.cfg.name == 'mix_transformer' or 'SAT' in self.cfg.name:
             self.backbone.load_state_dict(torch.load(backbone_path), strict=False)
         else:
             self.backbone.init_backbone(backbone_path)
