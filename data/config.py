@@ -1164,7 +1164,7 @@ SAT_yolact_mitb2_pascal_config_incremental_15with5 = yolact_resnet50_config.copy
     'dataset': pascal_sbd_dataset,
     'num_classes': len(pascal_sbd_dataset.class_names) + 1,
     'distillation':True,
-    # 'expert':True,
+    'expert':False,
     'loss_type':'SAT_loss',
 
     'total_num_classes': 21,

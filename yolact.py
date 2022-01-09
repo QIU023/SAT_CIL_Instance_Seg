@@ -700,7 +700,9 @@ class Yolact(nn.Module):
 
         self.selected_layers = cfg.backbone.selected_layers
 
+        print(cfg.loss_type)
         self.return_self_attention = cfg.loss_type == 'SAT_loss'
+        self.return_self_attention = True
         # print(self.selected_layers)
         # raise RuntimeError
 

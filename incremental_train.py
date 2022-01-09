@@ -216,10 +216,14 @@ class NetLoss(nn.Module):
         self.criterion_expert = criterion_expert
         self.criterion_SAT = criterion_SAT
     def forward(self, images, targets, masks, num_crowds):
-        
-        (preds,preds_extend,proto), selfattention = self.net(images,sub=False)
-        (preds_sub,proto_sub), selfattention_sub = self.sub_net(images,sub=True)
-        
+        # print(type(self.net(images, sub=False)))
+        # for item in self.net(images, sub=False):
+        #     print(item.shape)
+        detect, selfattention = self.net(images,sub=False)
+        (preds,preds_extend,proto) = detect
+        sub_detect, selfattention_sub = self.sub_net(images,sub=True)
+        (preds_sub,proto_sub) = sub_detect
+
         losses = self.criterion(self.net, preds_extend, targets, masks, num_crowds)
 
         if self.criterion_dis is not None:
@@ -239,6 +243,8 @@ class NetLoss(nn.Module):
 
 class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
     def __init__(self, instance_mask_region=True):
+        super(Self_Attention_Transfer_InstanceSeg_Loss, self).__init__()
+
         self.instance_mask_region = instance_mask_region
         self.scale_MiT = [128,64,32,16]
         self.reduction_MiT = [8,4,2,1]
@@ -375,6 +381,7 @@ def train():
                                     info_file=cfg.dataset.valid_info,
                                     transform=BaseTransform(MEANS))
     #
+    sub_net = None
     if cfg.distillation:
         yolact_sub_net = Yolact(sub=True)
         if args.load_distillation_net is not None:
@@ -384,7 +391,7 @@ def train():
                 p.requires_grad = False
         sub_net = yolact_sub_net
 
-
+    expert_net = None
     if cfg.expert:
         yolact_expert_net = Yolact_expert(sub=False)
         if args.load_expert_net is not None:
@@ -425,7 +432,7 @@ def train():
     # elif args.resume == 'latest':
     #     args.resume = SavePath.get_latest(args.save_folder, cfg.name)
 
-    # args.resume = None
+    args.resume = None
 
     if args.resume is not None:
         print('Initializing weights firstly...')
@@ -487,9 +494,11 @@ def train():
             print('Error: Batch allocation (%s) does not sum to batch size (%s).' % (args.batch_alloc, args.batch_size))
             exit(-1)
 
-    #net = CustomDataParallel(NetLoss(net,sub_net, criterion,criterion_dis))
+    net = NetLoss(net, sub_net, expert_net, criterion, criterion_dis,criterion_expert,criterion_SAT)
+    # net = CustomDataParallel(NetLoss(net,sub_net, criterion,criterion_dis))
+    # if torch.cuda.device_count() > 1:
+    net = CustomDataParallel(net)
 
-    net = CustomDataParallel(NetLoss(net, sub_net, expert_net, criterion, criterion_dis,criterion_expert,criterion_SAT))
    # net = NetLoss(net, criterion)
     if args.cuda:
         net = net.cuda()
