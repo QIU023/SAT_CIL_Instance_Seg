@@ -699,6 +699,8 @@ class Yolact(nn.Module):
                 cfg.mask_dim += 1
 
         self.selected_layers = cfg.backbone.selected_layers
+
+        self.return_self_attention = cfg.loss_type == 'SAT_loss'
         # print(self.selected_layers)
         # raise RuntimeError
 
@@ -1029,6 +1031,8 @@ class Yolact(nn.Module):
                     pred_outs_extend['conf_extend'] = F.softmax(
                         pred_outs_extend['conf_extend'][:, :, :len(self.to_learn)], -1)
 
+            if self.return_self_attention:
+                return self.detect(pred_outs, pred_outs_extend, self), attn
             return self.detect(pred_outs, pred_outs_extend, self)
 
 

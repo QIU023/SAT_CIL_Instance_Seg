@@ -114,6 +114,8 @@ args = parser.parse_args()
 if args.config is not None:
     set_cfg(args.config)
     cfg.step = args.step
+    args.return_attn = cfg.loss_type == 'SAT_loss'
+    cfg.return_attn = args.return_attn
 
 if args.dataset is not None:
     set_dataset(args.dataset)
@@ -126,6 +128,8 @@ if args.autoscale and args.batch_size != 8:
     cfg.lr *= factor
     cfg.max_iter //= factor
     cfg.lr_steps = [x // factor for x in cfg.lr_steps]
+
+
 
 # Update training parameters from the config if necessary
 def replace(name):
@@ -213,8 +217,8 @@ class NetLoss(nn.Module):
         self.criterion_SAT = criterion_SAT
     def forward(self, images, targets, masks, num_crowds):
         
-        preds,preds_extend,proto, selfattention = self.net(images,sub=False)
-        preds_sub,proto_sub, selfattention_sub = self.sub_net(images,sub=True)
+        (preds,preds_extend,proto), selfattention = self.net(images,sub=False)
+        (preds_sub,proto_sub), selfattention_sub = self.sub_net(images,sub=True)
         
         losses = self.criterion(self.net, preds_extend, targets, masks, num_crowds)
 
