@@ -931,7 +931,7 @@ def evalvideo(net:Yolact, path:str, out_path:str=None):
     
     cleanup_and_exit()
 
-def evaluate(net:Yolact, dataset, train_mode=False):
+def evaluate(net:Yolact, dataset, train_mode=False, active_class_num=-1):
     net.detect.use_fast_nms = args.fast_nms
     net.detect.use_cross_class_nms = args.cross_class_nms
     cfg.mask_proto_debug = args.mask_proto_debug
@@ -994,6 +994,8 @@ def evaluate(net:Yolact, dataset, train_mode=False):
     try:
         # Main eval loop
         for it, image_idx in enumerate(tqdm(dataset_indices)):
+            # if it > 0: break
+
             timer.reset()
 
             with timer.env('Load Data'):
@@ -1054,7 +1056,7 @@ def evaluate(net:Yolact, dataset, train_mode=False):
                     with open(args.ap_data_file, 'wb') as f:
                         pickle.dump(ap_data, f)
 
-                return calc_map(ap_data)
+                return calc_map(ap_data, active_class_num)
         elif args.benchmark:
             print()
             print()
@@ -1067,7 +1069,7 @@ def evaluate(net:Yolact, dataset, train_mode=False):
         print('Stopping...')
 
 #
-def calc_map(ap_data):
+def calc_map(ap_data, active_class_num=-1):
     print('Calculating mAP...')
     aps = [{'box': [], 'mask': []} for _ in iou_thresholds]
 
@@ -1112,9 +1114,12 @@ def calc_map(ap_data):
     print_maps(all_maps)
 
     print('#################### mask AP in iou thres 0.5:#######')
-    print(target_dict)
+    ret_metric = target_dict[:active_class_num]
 
-    return all_maps
+    ret_metric = np.array(ret_metric)
+    ret_metric = ret_metric.mean()
+
+    return all_maps, float(ret_metric)
 
 
 # def calc_map(ap_data):

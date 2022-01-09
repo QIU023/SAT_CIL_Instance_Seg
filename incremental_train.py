@@ -553,7 +553,7 @@ def train():
                                   pin_memory=True)
     
     
-    save_path = lambda epoch, iteration, prefix=None: SavePath(cfg.name, epoch, iteration, prefix).get_path(root=args.save_folder)
+    save_path = lambda epoch, iteration, prefix: SavePath(prefix+'_'+cfg.name, epoch, iteration).get_path(root=args.save_folder)
     time_avg = MovingAverage()
 
     global loss_types # Forms the print order
@@ -570,7 +570,8 @@ def train():
                 continue
             
             tbar = tqdm(data_loader)
-            for datum in tbar:
+            for i, datum in enumerate(tbar):
+                # if i > 0: break
                 # Stop if we've reached an epoch if we're resuming from start_iter
                 if iteration == (epoch+1)*epoch_size:
                     break
@@ -670,12 +671,13 @@ def train():
                 #             os.remove(latest)
             
             # This is done per epoch
+            # args.validation_epoch = 1
             if args.validation_epoch > 0:
                 if epoch % args.validation_epoch == 0 and epoch > 0:
-                    val_info = compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
-                    if val_info['mask'][0.5] > best_mask_AP:
-                        best_mask_AP = val_info['mask'][0.5]
-                        yolact_net.save_weights(save_path(epoch, iteration, 'best'))
+                    _, ret_metric = compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
+                    if ret_metric > best_mask_AP:
+                        best_mask_AP = ret_metric
+                        yolact_net.save_weights(save_path(epoch, iteration, f'best_mask_AP:{ret_metric:.3f}_'))
 
         # Compute validation mAP after training is finished
         # compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
@@ -686,7 +688,7 @@ def train():
             # Delete previous copy of the interrupted network so we don't spam the weights folder
             # SavePath.remove_interrupt(args.save_folder)
             ckpt_num = len(os.listdir(args.save_folder))
-            yolact_net.save_weights(save_path(epoch, repr(iteration) + '_interrupt_'+str(ckpt_num)))
+            yolact_net.save_weights(save_path(epoch, repr(iteration) + '_interrupt_'+str(ckpt_num), 'newest'))
         exit()
 
     # yolact_net.save_weights(save_path(epoch, iteration))

@@ -3,7 +3,7 @@ then
     DEVICES=$1
 fi
 
-exp_name='10-1_0_student_exp'
+exp_name='10-5_0_student_exp'
 exp_name4='10-5_1_SAT_exp'
 exp_name5='10-5_2_SAT_exp'
 # CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 initial_train.py \
@@ -15,7 +15,7 @@ exp_name5='10-5_2_SAT_exp'
 CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 incremental_train.py \
     --config SAT_yolact_mitb2_pascal_config_incremental_10with5_1 \
     --batch_size 8 \
-    --load_distillation_net weights/10-5/10-5_0_student_final.pth \
+    --load_distillation_net weights/10-5/10-5_0_student.pth \
     --save_folder weights/15-5/ > 'train_log/'${exp_name4}'.log' 2>&1 &
 
 # CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 incremental_train.py \
