@@ -216,7 +216,7 @@ class NetLoss(nn.Module):
         self.criterion_dis = criterion_dis
         self.criterion_expert = criterion_expert
         self.criterion_SAT = criterion_SAT
-        self.SAT_weight = 20
+        self.SAT_weight = 80
 
     def forward(self, images, targets, masks, num_crowds):
         # print(type(self.net(images, sub=False)))
@@ -295,13 +295,7 @@ class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
                         lbl_jj = Ftrans.to_pil_image(instance_mask[j][jj].cpu().numpy().astype(np.uint8))
                         lbl_jj = Ftrans.resize(lbl_jj, (sc,sc), InterpolationMode.NEAREST)
                         instance = torch.from_numpy(np.array(lbl_jj)).bool()
-                    #     resize_instance_mask_j.append(lbl_jj)
-                    # resize_instance_mask_j = torch.stack(resize_instance_mask_j, dim=0)
-                    # resize_label.append(resize_instance_mask_j)
-                    # batch_size = instance_mask.shape[0]
-                    # for i, instance_img_mask in enumerate(resize_label):
 
-                    # for instance in instance_img_mask:
                         old_mean_SelfAttention = old_img_SelfAttention[instance].mean(dim=0)
                         new_mean_SelfAttention = new_img_SelfAttention[instance].mean(dim=0)
 
@@ -311,10 +305,8 @@ class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
                             new_hs_SA = new_mean_SelfAttention[hs]
                             # print(old_hs_SA.shape)
                             
-                            old_hs_SA = F.normalize(old_hs_SA, p=2, dim=0)
-                            new_hs_SA = F.normalize(new_hs_SA, p=2, dim=0)
-
-                            hs_SA_loss = torch.frobenius_norm(old_hs_SA-new_hs_SA)
+                            hs_SA_loss = torch.frobenius_norm(old_hs_SA-new_hs_SA, dim=-1)
+                            
                             ins_SA_loss += hs_SA_loss
                         ins_SA_loss /= Heads
                         img_SA_loss += ins_SA_loss
@@ -322,8 +314,56 @@ class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
                     batch_SA_loss += img_SA_loss
                 batch_SA_loss /= Bs
                 scale_SA_loss += batch_SA_loss
-            else:
-                pass
+            else:                                   # using bbox region to do region pooling
+                batch_SA_loss = 0.
+                for j in range(Bs):
+                    resize_instance_mask_j = []
+                    instance_num = bbox[j].shape[0]
+
+                    # instance_img_mask = instance_mask[j]
+                    old_img_SelfAttention = old_network_SelfAttention[j]
+                    new_img_SelfAttention = new_network_SelfAttention[j]
+                    
+                    img_SA_loss = 0.
+                    # for jj in range(instance_num):
+                    # # print(instance_mask[j].max(), instance_mask[j].min())
+                    #     lbl_jj = Ftrans.to_pil_image(instance_mask[j][jj].cpu().numpy().astype(np.uint8))
+                    #     lbl_jj = Ftrans.resize(lbl_jj, (sc,sc), InterpolationMode.NEAREST)
+                    #     instance = torch.from_numpy(np.array(lbl_jj)).bool()
+                    #     resize_instance_mask_j.append(lbl_jj)
+                    # resize_instance_mask_j = torch.stack(resize_instance_mask_j, dim=0)
+                    # resize_label.append(resize_instance_mask_j)
+                    # batch_size = instance_mask.shape[0]
+                    # for i, instance_img_mask in enumerate(resize_label):
+
+                    for bbox_item in bbox[j]:
+
+                        c_x, c_y, h, w = bbox_item
+                        begin_w = c_x - (w//2)
+                        end_w = c_x + (w//2)
+                        begin_h = c_y - (h//2)
+                        end_h = c_y + (h//2)
+
+                        old_mean_SelfAttention = old_img_SelfAttention[begin_h:end_h, begin_w:end_w].mean(dim=[0,1])
+                        new_mean_SelfAttention = new_img_SelfAttention[begin_h:end_h, begin_w:end_w].mean(dim=[0,1])
+                        # bbox region self-attention Pooling
+
+                        ins_SA_loss = 0.
+                        for hs in range(Heads):
+                            old_hs_SA = old_mean_SelfAttention[hs]
+                            new_hs_SA = new_mean_SelfAttention[hs]
+                            # print(old_hs_SA.shape)
+                            
+                            hs_SA_loss = torch.frobenius_norm(old_hs_SA-new_hs_SA, dim=-1)
+                            
+                            ins_SA_loss += hs_SA_loss
+                        ins_SA_loss /= Heads
+                        img_SA_loss += ins_SA_loss
+                    img_SA_loss /= bbox[j].shape[0]
+                    batch_SA_loss += img_SA_loss
+                batch_SA_loss /= Bs
+                scale_SA_loss += batch_SA_loss
+                # pass
             
         scale_SA_loss /= 4
         return scale_SA_loss
@@ -671,10 +711,11 @@ def train():
                 #             os.remove(latest)
             
             # This is done per epoch
-            # args.validation_epoch = 1
+            args.validation_epoch = 1
             if args.validation_epoch > 0:
                 if epoch % args.validation_epoch == 0 and epoch > 0:
                     _, ret_metric = compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
+                    print(ret_metric, best_mask_AP)
                     if ret_metric > best_mask_AP:
                         best_mask_AP = ret_metric
                         yolact_net.save_weights(save_path(epoch, iteration, f'best_mask_AP:{ret_metric:.3f}_'))

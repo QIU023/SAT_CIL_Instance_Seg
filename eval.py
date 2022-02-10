@@ -956,7 +956,7 @@ def evaluate(net:Yolact, dataset, train_mode=False, active_class_num=-1):
             evalvideo(net, args.video)
         return
 
-    frame_times = MovingAverage()
+    # frame_times = MovingAverage()
     dataset_size = len(dataset) if args.max_images < 0 else min(args.max_images, len(dataset))
     progress_bar = ProgressBar(30, dataset_size)
 
@@ -1023,22 +1023,22 @@ def evaluate(net:Yolact, dataset, train_mode=False, active_class_num=-1):
             
             # First couple of images take longer because we're constructing the graph.
             # Since that's technically initialization, don't include those in the FPS calculations.
-            if it > 1:
-                frame_times.add(timer.total_time())
+            # if it > 1:
+            #     frame_times.add(timer.total_time())
             
-            if args.display:
-                if it > 1:
-                    print('Avg FPS: %.4f' % (1 / frame_times.get_avg()))
-                plt.imshow(img_numpy)
-                plt.title(str(dataset.ids[image_idx]))
-                plt.show()
-            elif not args.no_bar:
-                if it > 1: fps = 1 / frame_times.get_avg()
-                else: fps = 0
-                progress = (it+1) / dataset_size * 100
-                progress_bar.set_val(it+1)
-                print('\rProcessing Images  %s %6d / %6d (%5.2f%%)    %5.2f fps        '
-                    % (repr(progress_bar), it+1, dataset_size, progress, fps), end='')
+            # if args.display:
+            #     if it > 1:
+            #         print('Avg FPS: %.4f' % (1 / frame_times.get_avg()))
+            #     plt.imshow(img_numpy)
+            #     plt.title(str(dataset.ids[image_idx]))
+            #     plt.show()
+            # elif not args.no_bar:
+            #     if it > 1: fps = 1 / frame_times.get_avg()
+            #     else: fps = 0
+            #     progress = (it+1) / dataset_size * 100
+            #     progress_bar.set_val(it+1)
+            #     print('\rProcessing Images  %s %6d / %6d (%5.2f%%)    %5.2f fps        '
+            #         % (repr(progress_bar), it+1, dataset_size, progress, fps), end='')
 
 
 
@@ -1120,35 +1120,6 @@ def calc_map(ap_data, active_class_num=-1):
     ret_metric = ret_metric.mean()
 
     return all_maps, float(ret_metric)
-
-
-# def calc_map(ap_data):
-#     print('Calculating mAP...')
-#     aps = [{'box': [], 'mask': []} for _ in iou_thresholds]
-#
-#     for _class in range(len(cfg.dataset.class_names)):
-#         for iou_idx in range(len(iou_thresholds)):
-#             for iou_type in ('box', 'mask'):
-#                 ap_obj = ap_data[iou_type][iou_idx][_class]
-#
-#                 if not ap_obj.is_empty():
-#                     aps[iou_idx][iou_type].append(ap_obj.get_ap())
-#
-#     all_maps = {'box': OrderedDict(), 'mask': OrderedDict()}
-#
-#     # Looking back at it, this code is really hard to read :/
-#     for iou_type in ('box', 'mask'):
-#         all_maps[iou_type]['all'] = 0  # Make this first in the ordereddict
-#         for i, threshold in enumerate(iou_thresholds):
-#             mAP = sum(aps[i][iou_type]) / len(aps[i][iou_type]) * 100 if len(aps[i][iou_type]) > 0 else 0
-#             all_maps[iou_type][int(threshold * 100)] = mAP
-#         all_maps[iou_type]['all'] = (sum(all_maps[iou_type].values()) / (len(all_maps[iou_type].values()) - 1-10))
-#
-#     print_maps(all_maps)
-#
-#     # # Put in a prettier format so we can serialize it to json during training
-#     all_maps = {k: {j: round(u, 2) for j, u in v.items()} for k, v in all_maps.items()}
-#     return all_maps
 
 
 def print_maps(all_maps):

@@ -13,7 +13,7 @@ def remove_hdfs_cmd(target_file):
     os.system(cmd)
 
 def ls_hdfs_cmd(target_dir):
-    cmd = f'ç{target_dir}'
+    cmd = f'hdfs dfs -ls hdfs://haruna/home/byte_Data_Video/qiuyiqiao/{target_dir}'
     os.system(cmd)
 
 def mkdir_hdfs_cmd(target_dir):
