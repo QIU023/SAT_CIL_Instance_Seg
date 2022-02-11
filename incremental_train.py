@@ -690,7 +690,7 @@ def train():
                 total = sum([loss_avgs[k].get_avg() for k in losses])
                 loss_labels = sum([[fullname[k], loss_avgs[k].get_avg()] for k in loss_types if k in losses], [])
                 
-                tbar.set_description(('[%3d] %7d ||' + (' %s: %.3f |' * len(losses)) + ' T: %.3f || ETA: %s || timer: %.3f || lr:%.3f')
+                tbar.set_description(('[%3d] %7d ||' + (' %s: %.3f |' * len(losses)) + ' T: %.3f || ETA: %s || timer: %.3f || lr: %f')
                         % tuple([epoch, iteration] + loss_labels + [total, eta_str, elapsed] + [cur_lr]))
 
                 if args.log:

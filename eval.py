@@ -1073,7 +1073,7 @@ def calc_map(ap_data, active_class_range=(0,21)):
     print('Calculating mAP...')
     aps = [{'box': [], 'mask': []} for _ in iou_thresholds]
 
-    target_dict = np.zeros(3, 2, 20)
+    target_dict = np.zeros((3, 2, 20), dtype=np.float32)
     active_cls = range(active_class_range[0], active_class_range[1])
 
     mapping_threshold = [0.5, 0.75, 'all']
@@ -1099,13 +1099,19 @@ def calc_map(ap_data, active_class_range=(0,21)):
             for i, threshold in enumerate(iou_thresholds):
                 mAP = aps[i][iou_type][_class] * 100 if len(aps[i][iou_type]) > 0 else 0
                 all_maps[iou_type][int(threshold * 100)] = mAP
-                target_dict[mapping_threshold.index(threshold), mapping_AP_type.index(iou_type), _class] = mAP
-            
+                try:
+                    target_dict[mapping_threshold.index(threshold), mapping_AP_type.index(iou_type), _class] = mAP
+                except:
+                    pass
+
             all_mAP = (sum(all_maps[iou_type].values()) / (len(all_maps[iou_type].values()) - 1))
             all_maps[iou_type]['all'] = all_mAP
             threshold = 'all'
-            target_dict[mapping_threshold.index(threshold), mapping_AP_type.index(iou_type), _class] = all_mAP
-
+            try:
+                target_dict[mapping_threshold.index(threshold), mapping_AP_type.index(iou_type), _class] = all_mAP
+            except:
+                pass
+            
         print('#################### Class:', cfg.dataset.class_names[_class], '####################')
         print_maps(all_maps)
     ####################
