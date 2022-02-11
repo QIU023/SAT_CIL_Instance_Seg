@@ -861,8 +861,8 @@ def evalvideo(net:Yolact, path:str, out_path:str=None):
 
     # For each frame the sequence of functions it needs to go through to be processed (in reversed order)
     sequence = [prep_frame, eval_network, transform_frame]
-    pool = ThreadPool(processes=len(sequence) + args.video_multiframe + 2)
-    pool.apply_async(play_video)
+    # pool = ThreadPool(processes=len(sequence) + args.video_multiframe + 2)
+    # pool.apply_async(play_video)
     active_frames = [{'value': extract_frame(first_batch, i), 'idx': 0} for i in range(len(first_batch[0]))]
 
     print()
@@ -931,7 +931,7 @@ def evalvideo(net:Yolact, path:str, out_path:str=None):
     
     cleanup_and_exit()
 
-def evaluate(net:Yolact, dataset, train_mode=False, active_class_num=-1):
+def evaluate(net:Yolact, dataset, train_mode=False, active_class_range=(0,21)):
     net.detect.use_fast_nms = args.fast_nms
     net.detect.use_cross_class_nms = args.cross_class_nms
     cfg.mask_proto_debug = args.mask_proto_debug
@@ -1056,7 +1056,7 @@ def evaluate(net:Yolact, dataset, train_mode=False, active_class_num=-1):
                     with open(args.ap_data_file, 'wb') as f:
                         pickle.dump(ap_data, f)
 
-                return calc_map(ap_data, active_class_num)
+                return calc_map(ap_data, active_class_range)
         elif args.benchmark:
             print()
             print()
@@ -1069,13 +1069,20 @@ def evaluate(net:Yolact, dataset, train_mode=False, active_class_num=-1):
         print('Stopping...')
 
 #
-def calc_map(ap_data, active_class_num=-1):
+def calc_map(ap_data, active_class_range=(0,21)):
     print('Calculating mAP...')
     aps = [{'box': [], 'mask': []} for _ in iou_thresholds]
 
-    target_dict = []
+    target_dict = np.zeros(3, 2, 20)
+    active_cls = range(active_class_range[0], active_class_range[1])
+
+    mapping_threshold = [0.5, 0.75, 'all']
+    mapping_AP_type = ['box', 'mask']
 
     for _class in range(len(cfg.dataset.class_names)):
+        if _class not in active_cls:
+            continue
+
         for iou_idx in range(len(iou_thresholds)):
             for iou_type in ('box', 'mask'):
                 ap_obj = ap_data[iou_type][iou_idx][_class]
@@ -1088,12 +1095,17 @@ def calc_map(ap_data, active_class_num=-1):
         all_maps = {'box': OrderedDict(), 'mask': OrderedDict()}
         for iou_type in ('box', 'mask'):
             all_maps[iou_type]['all'] = 0  # Make this first in the ordereddict
+            
             for i, threshold in enumerate(iou_thresholds):
                 mAP = aps[i][iou_type][_class] * 100 if len(aps[i][iou_type]) > 0 else 0
                 all_maps[iou_type][int(threshold * 100)] = mAP
-                if threshold == 0.5 and iou_type == 'mask':
-                    target_dict.append(mAP)
-            all_maps[iou_type]['all'] = (sum(all_maps[iou_type].values()) / (len(all_maps[iou_type].values()) - 1))
+                target_dict[mapping_threshold.index(threshold), mapping_AP_type.index(iou_type), _class] = mAP
+            
+            all_mAP = (sum(all_maps[iou_type].values()) / (len(all_maps[iou_type].values()) - 1))
+            all_maps[iou_type]['all'] = all_mAP
+            threshold = 'all'
+            target_dict[mapping_threshold.index(threshold), mapping_AP_type.index(iou_type), _class] = all_mAP
+
         print('#################### Class:', cfg.dataset.class_names[_class], '####################')
         print_maps(all_maps)
     ####################
@@ -1114,12 +1126,15 @@ def calc_map(ap_data, active_class_num=-1):
     print_maps(all_maps)
 
     print('#################### mask AP in iou thres 0.5:#######')
-    ret_metric = target_dict[:active_class_num]
-
-    ret_metric = np.array(ret_metric)
-    ret_metric = ret_metric.mean()
-
-    return all_maps, float(ret_metric)
+    ret_metric = target_dict[:, :, active_class_range[0]:active_class_range[1]]
+    # ret_metric = target_dict
+    # ret_metric = np.array(ret_metric)
+    print('all active classes 50_iou, 75_iou, all_iou in (box, mask)')
+    print(ret_metric)
+    ret_metric = ret_metric.mean(axis=2) # shape 3*2 means: 50_iou(box, mask), 75_iou, all_iou
+    print('avg 50_iou, 75_iou, all_iou in (box, mask)')
+    print(ret_metric)
+    return all_maps, (float(ret_metric[0, 0]), float(ret_metric[0, 1]))
 
 
 def print_maps(all_maps):

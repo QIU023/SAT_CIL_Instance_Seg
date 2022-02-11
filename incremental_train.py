@@ -499,21 +499,31 @@ def train():
     # elif args.resume == 'latest':
     #     args.resume = SavePath.get_latest(args.save_folder, cfg.name)
 
-    args.resume = None
+    resume_epoch = 0
+    # args.resume = None
 
     if args.resume is not None:
         print('Initializing weights firstly...')
         pretrain_path = 'weights/mit_b2.pth'
         yolact_net.init_weights(backbone_path=pretrain_path)
         print('Resuming training, loading {}...'.format(args.resume))
-        yolact_net.load_weights(args.resume)
+        resume_epoch, resume_iter = yolact_net.load_weights(args.resume)
 
         # print('Resuming training,loading expert, loading {}...'.format(args.load_expert_net))
         # yolact_net.load_weights_expert(args.load_expert_net)
 
         # if args.start_iter == -1:  
             # begin_iter = 
-        args.start_iter = int(args.resume[:-4].split('_')[-1])
+        args.start_iter = resume_iter
+
+        if resume_iter == 0:
+            args.start_iter = int(args.resume[:-4].split('_')[-1])
+
+        if 'final' in args.resume:
+            args.start_iter = 120000
+
+        print(args.start_iter)
+
         print('resume iteration index:', args.start_iter)
         assert args.start_iter > 0
         # raise RuntimeError
@@ -604,7 +614,7 @@ def train():
     best_mask_AP = 0.
     # try-except so you can use ctrl+c to save early and stop training
     try:
-        for epoch in range(num_epochs):
+        for epoch in range(resume_epoch, num_epochs):
             # Resume from start_iter
             if (epoch+1)*epoch_size < iteration:
                 continue
@@ -711,17 +721,20 @@ def train():
                 #             os.remove(latest)
             
             # This is done per epoch
-            args.validation_epoch = 1
-            if args.validation_epoch > 0:
-                if epoch % args.validation_epoch == 0 and epoch > 0:
-                    _, ret_metric = compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
-                    print(ret_metric, best_mask_AP)
-                    if ret_metric > best_mask_AP:
-                        best_mask_AP = ret_metric
-                        yolact_net.save_weights(save_path(epoch, iteration, f'best_mask_AP:{ret_metric:.3f}_'))
+            args.validation_epoch = 10
+            # print('aaaaa!!!!!!!!!!!!!')
+            # if args.validation_epoch > 0:
+            if epoch % args.validation_epoch == 0 and epoch > 0:
+                _, ret_metric = compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
+                # print(ret_metric, best_mask_AP)
+                if ret_metric[0] > best_mask_AP:
+                    best_mask_AP = ret_metric[0]
+                    yolact_net.save_weights(save_path(epoch, iteration, 'best_model'), epoch, iteration, ret_metric)
+            yolact_net.save_weights(save_path(epoch, iteration, 'new_model'), epoch, iteration, (0., 0.))
 
         # Compute validation mAP after training is finished
-        # compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
+        compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
+
     except KeyboardInterrupt:
         if args.interrupt:
             print('Stopping early. Saving network...')
@@ -729,7 +742,7 @@ def train():
             # Delete previous copy of the interrupted network so we don't spam the weights folder
             # SavePath.remove_interrupt(args.save_folder)
             ckpt_num = len(os.listdir(args.save_folder))
-            yolact_net.save_weights(save_path(epoch, repr(iteration) + '_interrupt_'+str(ckpt_num), 'newest'))
+            yolact_net.save_weights(save_path(epoch, repr(iteration) + '_interrupt_'+str(ckpt_num), 'new_model'), epoch, iteration, (0., 0.))
         exit()
 
     # yolact_net.save_weights(save_path(epoch, iteration))

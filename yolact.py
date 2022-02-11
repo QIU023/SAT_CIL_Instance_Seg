@@ -775,13 +775,27 @@ class Yolact(nn.Module):
         self.detect = Detect(len(self.to_learn), bkg_label=0, top_k=cfg.nms_top_k,
                              conf_thresh=cfg.nms_conf_thresh, nms_thresh=cfg.nms_thresh)
 
-    def save_weights(self, path):
+    def save_weights(self, path, epoch, iteration, best_score):
         """ Saves the model's weights using compression because the file sizes were getting too big. """
-        torch.save(self.state_dict(), path)
+        save_dict = {
+            'state_dict': self.state_dict(),
+            'epoch': epoch,
+            'iteration': iteration,
+            'best_score': best_score
+        }
+        torch.save(save_dict, path)
 
     def load_weights(self, path):
         """ Loads weights from a compressed save file. """
-        state_dict = torch.load(path)
+        new_state_dict = torch.load(path)
+        epoch = 0
+        iteration = 0
+        try:
+            epoch = new_state_dict['epoch']
+            iteration = new_state_dict['iteration']
+            state_dict = new_state_dict['state_dict']
+        except:
+            state_dict = new_state_dict
 
         for key in list(state_dict.keys()):
             if key.startswith('backbone.layer') and not key.startswith('backbone.layers'):
@@ -792,17 +806,28 @@ class Yolact(nn.Module):
                 if cfg.fpn is not None and int(key.split('.')[2]) >= cfg.fpn.num_downsample:
                     del state_dict[key]
 
-
         self.load_state_dict(state_dict, strict=False)
+        return epoch, iteration
 
     def load_weights_expert(self, path):
-        """ Loads weights from a compressed save file. """
+        """ Loads weights from a compressed save file. """        
         state_dict = torch.load(path)
+        epoch = 0
+        iteration = 0
+        new_state_dict = torch.load(path)
+        try:
+            epoch = new_state_dict['epoch']
+            iteration = new_state_dict['iteration']
+            state_dict = new_state_dict['state_dict']
+        except:
+            state_dict = new_state_dict
+
         for key in list(state_dict.keys()):
             if  not key.startswith('prediction_layers_extend'):
                 del state_dict[key]
 
         self.load_state_dict(state_dict, strict=False)
+        return epoch, iteration
 
     def init_weights(self, backbone_path):
         """ Initialize weights for training. """

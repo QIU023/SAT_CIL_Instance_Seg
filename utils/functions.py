@@ -16,7 +16,7 @@ class MovingAverage():
     def add(self, elem):
         """ Adds an element to the window, removing the earliest element if necessary. """
         if not math.isfinite(elem):
-            print('Warning: Moving average ignored a value of %f' % elem)
+            # print('Warning: Moving average ignored a value of %f' % elem)
             return
         
         self.window.append(elem)
@@ -108,7 +108,8 @@ class SavePath:
         self.iteration = iteration
 
     def get_path(self, root:str=''):
-        file_name = self.model_name + '_' + str(self.epoch) + '_' + str(self.iteration) + '.pth'
+        file_name = self.model_name  + '.pth'
+        # + '_' + str(self.epoch) + '_' + str(self.iteration)
         return os.path.join(root, file_name)
 
     @staticmethod
