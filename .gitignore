@@ -1,3 +1,4 @@
 weights/*
 logs/*
 train_log/*
+debug/*

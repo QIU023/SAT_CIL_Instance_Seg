@@ -142,11 +142,12 @@ fullname = {
     'B': 'Box',
     'C': 'Class',
     'M': 'Mask',
-    'P': 'P',
-    'D': 'Distill',
-    'E': 'Expect',
-    'S': 'Student',
-    'I': 'I'
+    'P': 'Prototype',
+    'D': 'Coefficient Diversity',
+    'E': 'Class Existence',
+    'S': 'Semantic Seg',
+    'I': 'Mask IoU',
+    'SAT': "Self-Attention TranSfer"
 }
 # loss_types = ['BoundingBox', 'ClassConfidence', 'Mask', 'P', 'Distillation', 'Expect', 'Student', 'I']
 
@@ -297,11 +298,29 @@ def train():
         pretrained_path = 'weights/mit_b2.pth'
         yolact_net.init_weights(backbone_path=pretrained_path)
         print('Resuming training, loading {}...'.format(args.resume))
-        yolact_net.load_weights(args.resume)
+        resume_epoch, resume_iter = yolact_net.load_weights(args.resume)
 
-        if args.start_iter == -1:
-            args.start_iter = 120000
-            # args.start_iter = SavePath.from_str(args.resume).iteration
+        # print('Resuming training,loading expert, loading {}...'.format(args.load_expert_net))
+        # yolact_net.load_weights_expert(args.load_expert_net)
+
+        # if args.start_iter == -1:  
+            # begin_iter = 
+        args.start_iter = resume_iter
+
+        if resume_iter == 0:
+            if 'final' in args.resume:
+                args.start_iter = 120000
+            else:
+                try:
+                    args.start_iter = int(args.resume[:-4].split('_')[-1])
+                except:
+                    raise RuntimeError('please set the resume iteration!!!!!!')
+
+        print(args.start_iter)
+
+        print('resume iteration index:', args.start_iter)
+        assert args.start_iter > 0
+
     else:
         print('Initializing weights...')
         # print(cfg.backbone.path, args.save_folder)

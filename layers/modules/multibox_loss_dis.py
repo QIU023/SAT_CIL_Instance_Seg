@@ -79,13 +79,9 @@ class MultiBoxLoss_dis(nn.Module):
         conf_data = preds['conf'][:, :, :len(self.to_learn_class) - cfg.extend]
         mask_data = preds['mask']
 
-
-
         loc_data_sub = sub_predictions['loc']
         conf_data_sub = sub_predictions['conf'][:, :, :len(self.to_learn_class) - cfg.extend]
         mask_data_sub = sub_predictions['mask']
-
-
 
         losses_loc = MSE_Loss(loc_data, loc_data_sub)
         losses_conf = MSE_Loss(conf_data[:, :, 1:], conf_data_sub[:, :, 1:])
@@ -93,8 +89,9 @@ class MultiBoxLoss_dis(nn.Module):
 
         losses_proto = MSE_Loss(proto_sub,proto)
 
-        losses = (losses_conf + 15 * losses_mask + losses_loc + 15 * losses_proto)*10
-
-
-
+        losses = (losses_conf + 15 * losses_mask + losses_loc + 15 * losses_proto)
         return losses
+
+
+# def Unbiased_Knowledge_Distillatino_Loss_for_Instance_Seg_Cls_Conf(conf, conf_old, num_total_classes, num_old_classes):
+    

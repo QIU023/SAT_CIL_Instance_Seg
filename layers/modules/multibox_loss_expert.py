@@ -79,13 +79,9 @@ class MultiBoxLoss_expert(nn.Module):
         conf_data = preds_extend['conf_extend'][:, :, len(self.to_learn_class) - cfg.extend : len(self.to_learn_class)]
         mask_data = preds_extend['mask_extend']
 
-
-
         loc_data_expert = pred_expert['loc_extend']
         conf_data_expert = pred_expert['conf_extend'][:, :, len(self.to_learn_class) - cfg.extend:len(self.to_learn_class)]
         mask_data_expert= pred_expert['mask_extend']
-
-
 
         losses_loc = MSE_Loss(loc_data, loc_data_expert)
         losses_conf = MSE_Loss(conf_data, conf_data_expert)
@@ -93,11 +89,10 @@ class MultiBoxLoss_expert(nn.Module):
 
         losses_proto = MSE_Loss(proto_expert,proto)
 
-
-       # losses =  10 * losses_mask + losses_loc + 10 * losses_proto
-      #  losses = losses_conf + losses_mask*5 + losses_loc +  losses_proto*5
-      #  losses = (losses_conf + losses_loc) * 10
+        # losses =  10 * losses_mask + losses_loc + 10 * losses_proto
+        # losses = losses_conf + losses_mask*5 + losses_loc +  losses_proto*5
+        # losses = (losses_conf + losses_loc) * 10
         losses = (losses_conf + 15 * losses_mask + losses_loc + 15 * losses_proto)
 
-
         return losses
+

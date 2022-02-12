@@ -8,7 +8,7 @@ from yolact import Yolact
 from yolact_expert import Yolact_expert
 
 from tqdm import tqdm
-
+from copy import deepcopy
 # from modules.segformer_offical.mix_transformer import mit_b2
 
 import os
@@ -26,6 +26,8 @@ import torch.utils.data as data
 import numpy as np
 import argparse
 import datetime
+
+from PIL import Image
 
 # Oof
 import eval as eval_script
@@ -61,7 +63,7 @@ parser.add_argument('--load_distillation_net',
 default='weights/1-19/yolact_resnet50_pascal_114_120000.pth', type=str,
                     help='use the distillation')
 parser.add_argument('--resume',
-default='weights/1-19/yolact_resnet50_pascal_114_120000.pth', type=str,
+default=None, type=str,
                     help='Checkpoint state_dict file to resume training from. If this is "interrupt"'\
                          ', the model will resume training from the interrupt file.')
 parser.add_argument('--load_expert_net',
@@ -156,12 +158,12 @@ fullname = {
     'B': 'Box',
     'C': 'Class',
     'M': 'Mask',
-    'P': 'P',
-    'D': 'Distill',
-    'E': 'Expect',
-    'S': 'Student',
-    'I': 'I',
-    'SAT': "Self-Attention Transfer"
+    'P': 'Prototype',
+    'D': 'Coefficient Diversity',
+    'E': 'Class Existence',
+    'S': 'Semantic Seg',
+    'I': 'Mask IoU',
+    'SAT': "Self-Attention TranSfer"
 }
 # loss_types = ['BoundingBox', 'ClassConfidence', 'Mask', 'P', 'Distillation', 'Expect', 'Student', 'I']
 
@@ -285,6 +287,9 @@ class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
                     resize_instance_mask_j = []
                     instance_num = instance_mask[j].shape[0]
 
+                    # print(instance_mask[j].shape)
+                    # print(instance_mask.shape)
+
                     instance_img_mask = instance_mask[j]
                     old_img_SelfAttention = old_network_SelfAttention[j]
                     new_img_SelfAttention = new_network_SelfAttention[j]
@@ -294,7 +299,14 @@ class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
                     # print(instance_mask[j].max(), instance_mask[j].min())
                         lbl_jj = Ftrans.to_pil_image(instance_mask[j][jj].cpu().numpy().astype(np.uint8))
                         lbl_jj = Ftrans.resize(lbl_jj, (sc,sc), InterpolationMode.NEAREST)
-                        instance = torch.from_numpy(np.array(lbl_jj)).bool()
+                        lbl_jj = np.array(lbl_jj)
+                        # lbl_jj2 = deepcopy(lbl_jj)
+                        # lbl_jj2[lbl_jj2 == 1] = 255
+                        # lbl_jj2 = Image.fromarray(lbl_jj2)
+                        # lbl_jj2.save(f'debug/{ii}_scale_{j}_image_{jj}_instance.png')
+                        instance = torch.from_numpy(lbl_jj).bool()
+
+                        # print((instance==0).sum()/(sc*sc))
 
                         old_mean_SelfAttention = old_img_SelfAttention[instance].mean(dim=0)
                         new_mean_SelfAttention = new_img_SelfAttention[instance].mean(dim=0)
@@ -501,14 +513,18 @@ def train():
 
     resume_epoch = 0
     # args.resume = None
+    # if arg.resume == ''
 
     if args.resume is not None:
         print('Initializing weights firstly...')
         pretrain_path = 'weights/mit_b2.pth'
         yolact_net.init_weights(backbone_path=pretrain_path)
         print('Resuming training, loading {}...'.format(args.resume))
-        resume_epoch, resume_iter = yolact_net.load_weights(args.resume)
 
+        try:
+            resume_epoch, resume_iter = yolact_net.load_weights(args.resume)
+        except:
+            resume_epoch, resume_iter = 0, 0
         # print('Resuming training,loading expert, loading {}...'.format(args.load_expert_net))
         # yolact_net.load_weights_expert(args.load_expert_net)
 
@@ -546,14 +562,13 @@ def train():
     criterion_dis = None
     criterion_expert = None
     criterion_SAT = None
+    criterion_dis = MultiBoxLoss_dis(total_num_classes=cfg.total_num_classes,
+                            to_learn_class=to_learn,
+                            distillation=args.distillation,
+                            pos_threshold=cfg.positive_iou_threshold,
+                            neg_threshold=cfg.negative_iou_threshold,
+                            negpos_ratio=cfg.ohem_negpos_ratio)
     if cfg.loss_type != 'SAT_loss':
-        criterion_dis = MultiBoxLoss_dis(total_num_classes=cfg.total_num_classes,
-                                to_learn_class=to_learn,
-                                distillation=args.distillation,
-                                pos_threshold=cfg.positive_iou_threshold,
-                                neg_threshold=cfg.negative_iou_threshold,
-                                negpos_ratio=cfg.ohem_negpos_ratio)
-
         criterion_expert = MultiBoxLoss_expert(total_num_classes=cfg.total_num_classes,
                                 to_learn_class=to_learn,
                                 distillation=args.distillation,
@@ -708,12 +723,12 @@ def train():
                 
                 iteration += 1
 
-                if iteration % args.save_interval == 0 and iteration != args.start_iter:
-                    if args.keep_latest:
-                        latest = SavePath.get_latest(args.save_folder, cfg.name)
+                # if iteration % args.save_interval == 0 and iteration != args.start_iter:
+                #     if args.keep_latest:
+                #         latest = SavePath.get_latest(args.save_folder, cfg.name)
 
-                    print('Saving state, iter:', iteration)
-                    yolact_net.save_weights(save_path(epoch, iteration, 'latest'))
+                #     print('Saving state, iter:', iteration)
+                #     yolact_net.save_weights(save_path(epoch, iteration, 'latest'))
 
                 #     if args.keep_latest and latest is not None:
                 #         if args.keep_latest_interval <= 0 or iteration % args.keep_latest_interval != args.save_interval:
