@@ -39,7 +39,7 @@ parser.add_argument('--batch_size', default=8, type=int,
                     help='Batch size for training')
 parser.add_argument('--task', default='19-1', type=str)
 parser.add_argument('--step', default=0, type=int)
-parser.add_argument('--resume', default='', type=str,
+parser.add_argument('--resume', default=None, type=str,
                     help='Checkpoint state_dict file to resume training from. If this is "interrupt"' \
                          ', the model will resume training from the interrupt file.')
 parser.add_argument('--start_iter', default=-1, type=int,
@@ -209,6 +209,7 @@ def split_classes(cfg):
         prefetch_cats = to_learn[-prefetch_cats:]
     else:
         prefetch_cats = to_learn
+    print(f'total learned or learning class: {to_learn}, \n incremental class: {prefetch_cats}, \n remain: {remaining} not learned!')
     return to_learn, prefetch_cats, remaining
 
 
@@ -259,11 +260,23 @@ def train():
         print('Initializing weights firstly...')
         yolact_net.init_weights(backbone_path=pretrained_path)
         print('Resuming training, loading {}...'.format(args.resume))
-        yolact_net.load_weights(args.resume)
+        try:
+            resume_epoch, resume_iter = yolact_net.load_weights(args.resume)
+        except:
+            resume_epoch, resume_iter = 0, 0
 
-        if args.start_iter == -1:
-            # args.start_iter = SavePath.from_str(args.resume).iteration
-            args.start_iter = 50000
+        args.start_iter = resume_iter
+
+        if resume_iter == 0:
+            args.start_iter = int(args.resume[:-4].split('_')[-1])
+
+        if 'final' in args.resume:
+            args.start_iter = 120000
+
+        print(args.start_iter)
+
+        print('resume iteration index:', args.start_iter)
+        assert args.start_iter > 0
     else:
         print('Initializing weights...')
         yolact_net.init_weights(backbone_path=pretrained_path)
@@ -275,7 +288,8 @@ def train():
                              distillation=args.distillation,
                              pos_threshold=cfg.positive_iou_threshold,
                              neg_threshold=cfg.negative_iou_threshold,
-                             negpos_ratio=cfg.ohem_negpos_ratio)
+                             negpos_ratio=cfg.ohem_negpos_ratio,
+                             is_expert_range=(cfg.first_num_classes, cfg.first_num_classes+cfg.extend))
 
 
     if args.batch_alloc is not None:

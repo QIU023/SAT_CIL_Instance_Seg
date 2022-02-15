@@ -218,7 +218,7 @@ class NetLoss(nn.Module):
         self.criterion_dis = criterion_dis
         self.criterion_expert = criterion_expert
         self.criterion_SAT = criterion_SAT
-        self.SAT_weight = 80
+        self.SAT_weight = 400
 
     def forward(self, images, targets, masks, num_crowds):
         # print(type(self.net(images, sub=False)))
@@ -579,7 +579,7 @@ def train():
     # if cfg.loss_type == 'SAT_loss':
     else:
         criterion_SAT = Self_Attention_Transfer_InstanceSeg_Loss(True)
-
+        # criterion_SAT = None
 
     if args.batch_alloc is not None:
         args.batch_alloc = [int(x) for x in args.batch_alloc.split(',')]
@@ -740,7 +740,8 @@ def train():
             # print('aaaaa!!!!!!!!!!!!!')
             # if args.validation_epoch > 0:
             if epoch % args.validation_epoch == 0 and epoch > 0:
-                _, ret_metric = compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
+                _, ret_metric = compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None,
+                    active_class_range=(0,cfg.first_num_classes+cfg.extend))
                 # print(ret_metric, best_mask_AP)
                 if ret_metric[0] > best_mask_AP:
                     best_mask_AP = ret_metric[0]
@@ -748,7 +749,8 @@ def train():
             yolact_net.save_weights(save_path(epoch, iteration, 'new_model'), epoch, iteration, (0., 0.))
 
         # Compute validation mAP after training is finished
-        compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
+        compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None,
+            active_class_range=(0, cfg.first_num_classes+cfg.extend))
 
     except KeyboardInterrupt:
         if args.interrupt:
@@ -861,14 +863,14 @@ def compute_validation_loss(net, data_loader, criterion):
         # for i in 
         print(('Validation ||' + (' %s: %.3f |' * len(losses)) + ')') % tuple(loss_labels), flush=True)
 
-def compute_validation_map(epoch, iteration, yolact_net, dataset, log:Log=None):
+def compute_validation_map(epoch, iteration, yolact_net, dataset, log:Log=None, active_class_range=(0,21)):
     with torch.no_grad():
         yolact_net.eval()
         
         start = time.time()
         print()
         print("Computing validation mAP (this may take a while)...", flush=True)
-        val_info = eval_script.evaluate(yolact_net, dataset, train_mode=True)
+        val_info = eval_script.evaluate(yolact_net, dataset, train_mode=True, active_class_range=active_class_range)
         end = time.time()
 
         if log is not None:

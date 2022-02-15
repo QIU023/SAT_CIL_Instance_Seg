@@ -124,3 +124,22 @@ Traceback (most recent call last):
   File "incremental_train.py", line 616, in train
     for epoch in range(resume_epoch, num_epochs):
 UnboundLocalError: local variable 'resume_epoch' referenced before assignment
+usage: incremental_train.py [-h] [--batch_size BATCH_SIZE] [--step STEP]
+                            [--task TASK] [--start_iter START_ITER]
+                            [--num_workers NUM_WORKERS] [--cuda CUDA]
+                            [--lr LR] [--distillation DISTILLATION]
+                            [--load_distillation_net LOAD_DISTILLATION_NET]
+                            [--resume RESUME]
+                            [--load_expert_net LOAD_EXPERT_NET]
+                            [--save_folder SAVE_FOLDER] [--momentum MOMENTUM]
+                            [--decay DECAY] [--gamma GAMMA]
+                            [--log_folder LOG_FOLDER] [--config CONFIG]
+                            [--save_interval SAVE_INTERVAL]
+                            [--validation_size VALIDATION_SIZE]
+                            [--validation_epoch VALIDATION_EPOCH]
+                            [--extend_class EXTEND_CLASS] [--keep_latest]
+                            [--keep_latest_interval KEEP_LATEST_INTERVAL]
+                            [--dataset DATASET] [--no_log] [--log_gpu]
+                            [--no_interrupt] [--batch_alloc BATCH_ALLOC]
+                            [--no_autoscale]
+incremental_train.py: error: unrecognized arguments: /

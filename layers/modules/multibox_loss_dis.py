@@ -89,7 +89,7 @@ class MultiBoxLoss_dis(nn.Module):
 
         losses_proto = MSE_Loss(proto_sub,proto)
 
-        losses = (losses_conf + 15 * losses_mask + losses_loc + 15 * losses_proto)
+        losses = (losses_conf + 15 * losses_mask + losses_loc + 15 * losses_proto)*10
         return losses
 
 

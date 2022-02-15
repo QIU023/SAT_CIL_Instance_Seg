@@ -493,10 +493,13 @@ def train():
             # This is done per epoch
             if args.validation_epoch > 0:
                 if epoch % args.validation_epoch == 0 and epoch > 0:
-                    compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
+                    compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None, 
+                        active_class_range=(0,cfg.first_num_classes+cfg.extend))
 
         # Compute validation mAP after training is finished
-        compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
+        compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None, 
+            active_class_range=(0,cfg.first_num_classes+cfg.extend))
+            
     except KeyboardInterrupt:
         if args.interrupt:
             print('Stopping early. Saving network...')
@@ -612,14 +615,14 @@ def compute_validation_loss(net, data_loader, criterion):
         print(('Validation ||' + (' %s: %.3f |' * len(losses)) + ')') % tuple(loss_labels), flush=True)
 
 
-def compute_validation_map(epoch, iteration, yolact_net, dataset, log: Log = None):
+def compute_validation_map(epoch, iteration, yolact_net, dataset, log: Log = None, active_class_range=(0,21)):
     with torch.no_grad():
         yolact_net.eval()
 
         start = time.time()
         print()
         print("Computing validation mAP (this may take a while)...", flush=True)
-        val_info = eval_script.evaluate(yolact_net, dataset, train_mode=True)
+        val_info = eval_script.evaluate(yolact_net, dataset, train_mode=True, active_class_range=active_class_range)
         end = time.time()
 
         if log is not None:
