@@ -42,7 +42,20 @@ class MultiBoxLoss(nn.Module):
         self.neg_threshold = neg_threshold
         self.negpos_ratio = negpos_ratio
 
-        self.is_expert_range = is_expert_range
+        self.is_expert_range = range(is_expert_range[0], is_expert_range[1]+1)
+
+        weight_class = torch.zeros(len(self.to_learn_class)).cuda()
+        weight_class[0] = 1
+        if self.is_expert_range is not None:
+            for c in self.is_expert_range:
+                weight_class[c] = 1
+        else:
+            for c in self.to_learn_class:
+                weight_class[c] = 1
+
+        self.weight_class = weight_class
+        print(self.weight_class)
+        # raise RuntimeError
 
         # self.active_class = list(range(16, 21))
         # self.active_class = list(range(6,9))
@@ -290,21 +303,14 @@ class MultiBoxLoss(nn.Module):
         #     #loss_c = F.cross_entropy(batch_conf, targets_weighted, reduction='none')
         #     loss_c = torch.zeros(0)
 
-        weight_class = torch.zeros(len(self.to_learn_class)).cuda()
-        weight_class[0] = 1
-        if self.is_expert_range is not None:
-            for c in self.is_expert_range:
-                weight_class[c] = 1
-        else:
-            for c in self.to_learn_class:
-                weight_class[c] = 1
+
         
         # print(weight_class)
         # raise RuntimeError
         # print(torch.unique(targets_weighted))
         # print(conf_p.shape, targets_weighted.shape)
 
-        loss_c = F.cross_entropy(conf_p, targets_weighted, weight=weight_class,reduction='none')
+        loss_c = F.cross_entropy(conf_p, targets_weighted, weight=self.weight_class,reduction='none')
 
         if cfg.use_class_balanced_conf:
             # Lazy initialization

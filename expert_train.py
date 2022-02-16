@@ -71,7 +71,7 @@ parser.add_argument('--save_interval', default=10000, type=int,
                     help='The number of iterations between saving the model.')
 parser.add_argument('--validation_size', default=5000, type=int,
                     help='The number of images to use for validation.')
-parser.add_argument('--validation_epoch', default=1, type=int,
+parser.add_argument('--validation_epoch', default=10, type=int,
                     help='Output validation information every n iterations. If -1-10, do no validation.')
 parser.add_argument('--extend_class', default=0, type=int,
                     help='The number of extend class')
@@ -289,9 +289,14 @@ def train():
                              pos_threshold=cfg.positive_iou_threshold,
                              neg_threshold=cfg.negative_iou_threshold,
                              negpos_ratio=cfg.ohem_negpos_ratio,
-                             is_expert_range=(cfg.first_num_classes, cfg.first_num_classes+cfg.extend))
-
-
+                             is_expert_range=(cfg.first_num_classes+1, cfg.first_num_classes+cfg.extend))
+    """
+    cfg.extend means the number of new classes! which will be used when cfg.expert == True
+    cfg.first_num_classes means old classes number
+    like 10-5-5:
+    stage 2: first_num_classes = 10, extend = 5; 
+    stage 3: first_num_classes = 15, extend = 5;
+    """
     if args.batch_alloc is not None:
         args.batch_alloc = [int(x) for x in args.batch_alloc.split(',')]
         if sum(args.batch_alloc) != args.batch_size:

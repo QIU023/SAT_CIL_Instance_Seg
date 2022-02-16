@@ -314,7 +314,9 @@ def train():
                 try:
                     args.start_iter = int(args.resume[:-4].split('_')[-1])
                 except:
-                    raise RuntimeError('please set the resume iteration!!!!!!')
+                    print('warning! resume iteration is not found in ckpt! treat as training finished!')
+                    args.start_iter = 120000
+                    # raise RuntimeError('please set the resume iteration!!!!!!')
 
         print(args.start_iter)
 
