@@ -702,7 +702,7 @@ class Yolact(nn.Module):
 
         print(cfg.loss_type)
         self.return_self_attention = cfg.loss_type == 'SAT_loss'
-        self.return_self_attention = True
+        # self.return_self_attention = True
         # print(self.selected_layers)
         # raise RuntimeError
 

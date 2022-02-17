@@ -1,5 +1,6 @@
 from backbone import ResNetBackbone, VGGBackbone, ResNetBackboneGN, DarkNetBackbone
-from backbone import mit_b2 as MixTransformerBackbone
+from backbone import mit_b2 as MixTransformerBackboneB2
+from backbone import mit_b4 as MixTransformerBackboneB4
 from math import sqrt
 import torch
 
@@ -268,7 +269,16 @@ resnet101_gn_backbone = backbone_base.copy({
 
 mit_b2_backbone = backbone_base.copy({
     'name': 'MixTransformer',
-    'type': MixTransformerBackbone,
+    'type': MixTransformerBackboneB2,
+    'transform': mit_transform,
+    'selected_layers': list(range(0, 4)),
+    'pred_scales': [[1]]*6,
+    'pred_aspect_ratios': [ [[0.66685089, 1.7073535, 0.87508774, 1.16524493, 0.49059086]] ] * 6,
+})
+
+mit_b4_backbone = backbone_base.copy({
+    'name': 'MixTransformer',
+    'type': MixTransformerBackboneB4,
     'transform': mit_transform,
     'selected_layers': list(range(0, 4)),
     'pred_scales': [[1]]*6,
@@ -736,23 +746,25 @@ yolact_base_config = coco_base_config.copy({
     'loss_type': 'MT_loss'
 })
 
+
 yolact_mitb2_coco_config_offline = yolact_base_config.copy({
     'name': 'mix_transformer',  # Will default to yolact_resnet50_pascal
 
     # Dataset stuff
-    'backbone': mit_b2_backbone.copy({
+    'backbone': mit_b4_backbone.copy({
         'pred_scales': [[16], [32], [64], [128], [256], [512]],
         'use_square_anchors': False,
-        'path': 'mit_b2.pth',
+        'path': 'mit_b4.pth',
     }),
     # 'dataset': pascal_sbd_dataset,
     # 'num_classes': len(pascal_sbd_dataset.class_names) + 1,
     'distillation': False,
     'expert': False,
-    # 'total_num_classes': 21,
-    # 'first_num_classes': 20,
+    'total_num_classes': 81,
+    'first_num_classes': 80,
     'extend': 0,
     'ratio': 2,
+    'max_size': 512
     # 'max_iter': 120000,
     # 'lr_steps': (60000, 100000),
 })

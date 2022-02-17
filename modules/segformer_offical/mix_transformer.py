@@ -485,11 +485,11 @@ class mit_b3(MixVisionTransformer):
 
 # @BACKBONES.register_module()
 class mit_b4(MixVisionTransformer):
-    def __init__(self, **kwargs):
+    def __init__(self, return_attn=False, **kwargs):
         super(mit_b4, self).__init__(
             patch_size=4, embed_dims=[64, 128, 320, 512], num_heads=[1, 2, 5, 8], mlp_ratios=[4, 4, 4, 4],
             qkv_bias=True, norm_layer=partial(nn.LayerNorm, eps=1e-6), depths=[3, 8, 27, 3], sr_ratios=[8, 4, 2, 1],
-            drop_rate=0.0, drop_path_rate=0.1)
+            drop_rate=0.0, drop_path_rate=0.1, return_attn=return_attn)
 
 
 # @BACKBONES.register_module()

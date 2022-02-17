@@ -3,4 +3,4 @@
 # from .misc import GlobalAvgPool2d
 from .segformer import SegFormer, segformer_type_args, SegFormer_Head, SegFormer_Body
 # from .DSSNet import DSS, build_model
-from .segformer_offical.mix_transformer import mit_b2
+from .segformer_offical.mix_transformer import mit_b2, mit_b4
