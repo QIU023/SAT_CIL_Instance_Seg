@@ -324,6 +324,8 @@ def train():
     iteration = max(args.start_iter, 0)
     last_time = time.time()
 
+    best_mask_AP = 0.
+
     epoch_size = len(dataset) // args.batch_size
     num_epochs = math.ceil(cfg.max_iter / epoch_size)
 
@@ -472,7 +474,7 @@ def train():
         # Compute validation mAP after training is finished
         compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None, 
             active_class_range=(cfg.first_num_classes,cfg.first_num_classes+cfg.extend))
-            
+
     except KeyboardInterrupt:
         if args.interrupt:
             print('Stopping early. Do you want to Save network??...')
