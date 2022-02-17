@@ -25,6 +25,7 @@ exp_name3='15-5_1_student_exp'
 CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 expert_train.py \
     --config yolact_mitb2_pascal_config_expert_15with5 \
     --batch_size 8 --num_workers 8 \
+    --resume weights/15-5/best_model_mix_transformer.pth \
     --save_folder weights/15-5 > 'train_log/'${exp_name2}'.log' 2>&1 &
 
 # CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 incremental_train.py \

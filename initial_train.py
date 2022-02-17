@@ -377,7 +377,7 @@ def train():
                                   shuffle=True, collate_fn=detection_collate,
                                   pin_memory=True)
 
-    save_path = lambda epoch, iteration: SavePath(cfg.name, epoch, iteration).get_path(root=args.save_folder)
+    save_path = lambda epoch, iteration, prefix: SavePath(prefix+'_'+cfg.name, epoch, iteration).get_path(root=args.save_folder)
     time_avg = MovingAverage()
 
     global loss_types  # Forms the print order
@@ -500,7 +500,7 @@ def train():
             # if args.validation_epoch > 0:
             if epoch % args.validation_epoch == 0 and epoch > 0:
                 _, ret_metric = compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None,
-                    active_class_range=(cfg.first_num_classes,cfg.first_num_classes+cfg.extend))
+                    active_class_range=(0, cfg.first_num_classes))
                 # print(ret_metric, best_mask_AP)
                 if ret_metric[0] > best_mask_AP:
                     best_mask_AP = ret_metric[0]
@@ -516,7 +516,7 @@ def train():
 
         # Compute validation mAP after training is finished
         compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None, 
-            active_class_range=(0,cfg.first_num_classes+cfg.extend))
+            active_class_range=(0,cfg.first_num_classes))
             
     except KeyboardInterrupt:
         if args.interrupt:

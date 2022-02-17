@@ -532,11 +532,15 @@ def train():
             # begin_iter = 
         args.start_iter = resume_iter
 
-        if 'final' in args.resume:
-            args.start_iter = 120000
-
-        elif resume_iter == 0:
-            args.start_iter = int(args.resume[:-4].split('_')[-1])
+        if resume_iter == 0:
+            if 'final' in args.resume:
+                args.start_iter = 120000
+            else:
+                try:
+                    args.start_iter = int(args.resume[:-4].split('_')[-1])
+                except:
+                    print('warning! resume iteration is not found in ckpt! treat as training finished!')
+                    args.start_iter = 120000
 
         print(args.start_iter)
 

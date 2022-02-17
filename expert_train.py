@@ -268,10 +268,14 @@ def train():
         args.start_iter = resume_iter
 
         if resume_iter == 0:
-            args.start_iter = int(args.resume[:-4].split('_')[-1])
-
-        if 'final' in args.resume:
-            args.start_iter = 120000
+            if 'final' in args.resume:
+                args.start_iter = 120000
+            else:
+                try:
+                    args.start_iter = int(args.resume[:-4].split('_')[-1])
+                except:
+                    print('warning! resume iteration is not found in ckpt! treat as training finished!')
+                    args.start_iter = 120000
 
         print(args.start_iter)
 
@@ -331,7 +335,7 @@ def train():
                                   shuffle=True, collate_fn=detection_collate,
                                   pin_memory=True)
 
-    save_path = lambda epoch, iteration: SavePath(cfg.name, epoch, iteration).get_path(root=args.save_folder)
+    save_path = lambda epoch, iteration, prefix: SavePath(prefix+'_'+cfg.name, epoch, iteration).get_path(root=args.save_folder)
     time_avg = MovingAverage()
 
     global loss_types  # Forms the print order
@@ -466,7 +470,9 @@ def train():
             #         compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
 
         # Compute validation mAP after training is finished
-        compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None)
+        compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None, 
+            active_class_range=(cfg.first_num_classes,cfg.first_num_classes+cfg.extend))
+            
     except KeyboardInterrupt:
         if args.interrupt:
             print('Stopping early. Do you want to Save network??...')
