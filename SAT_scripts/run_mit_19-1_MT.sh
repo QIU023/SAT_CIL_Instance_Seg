@@ -16,6 +16,9 @@ CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 expert_train.py \
     --batch_size 8 --num_workers 8 \
     --save_folder weights/19-1 > 'train_log/'${exp_name2}'.log' 2>&1 &
 
+
+    # --resume weights/19-1/new_model_mix_transformer.pth \
+
 # CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 incremental_train.py \
 #     --config yolact_mitb2_pascal_config_incremental \
 #     --resume weights/19-1/mix_transformer_2264_120000.pth \

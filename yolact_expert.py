@@ -997,6 +997,7 @@ class Yolact_expert(nn.Module):
 
 
         self.load_state_dict(state_dict, strict=False)
+        return epoch, iteration
 
     def load_weights_expert(self, path):
         """ Loads weights from a compressed save file. """
