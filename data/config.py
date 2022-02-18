@@ -746,6 +746,49 @@ yolact_base_config = coco_base_config.copy({
     'loss_type': 'MT_loss'
 })
 
+yolact_mitb2_coco_config_40with40 = yolact_base_config.copy({
+    'name': 'mix_transformer',  # Will default to yolact_resnet50_pascal
+    'task': "40-40",
+
+    # Dataset stuff
+    'backbone': mit_b4_backbone.copy({
+        'pred_scales': [[16], [32], [64], [128], [256], [512]],
+        'use_square_anchors': False,
+        'path': 'mit_b4.pth',
+    }),
+    # 'dataset': pascal_sbd_dataset,
+    # 'num_classes': len(pascal_sbd_dataset.class_names) + 1,
+    'distillation': False,
+    'expert': False,
+    'total_num_classes': 81,
+    'first_num_classes': 40,
+    'extend': 0,
+    'ratio': 2,
+    'max_size': 512,
+})
+
+yolact_mitb2_coco_config_40with40_expert = yolact_base_config.copy({
+    'name': 'mix_transformer',  # Will default to yolact_resnet50_pascal
+    'task': "40-40",
+
+    # Dataset stuff
+    'backbone': mit_b4_backbone.copy({
+        'pred_scales': [[16], [32], [64], [128], [256], [512]],
+        'use_square_anchors': False,
+        'path': 'mit_b4.pth',
+    }),
+    # 'dataset': pascal_sbd_dataset,
+    # 'num_classes': len(pascal_sbd_dataset.class_names) + 1,
+    'distillation': False,
+    'expert': False,
+    'total_num_classes': 81,
+    'first_num_classes': 40,
+    'extend': 40,
+    'ratio': 2,
+    'max_size': 512,
+    'max_iter': 180000,
+    'lr_steps': (100000, 140000),
+})
 
 yolact_mitb2_coco_config_offline = yolact_base_config.copy({
     'name': 'mix_transformer',  # Will default to yolact_resnet50_pascal

@@ -254,8 +254,11 @@ def train():
         args.resume = SavePath.get_latest(args.save_folder, cfg.name)
 
     # args.resume = None
-
-    pretrained_path = 'weights/mit_b2.pth'
+    if cfg.total_num_classes == 81:
+        pretrained_path = 'weights/mit_b4.pth'
+    else:
+        pretrained_path = 'weights/mit_b2.pth'
+    # pretrained_path = 'weights/mit_b2.pth'
     if args.resume is not None:
         print('Initializing weights firstly...')
         yolact_net.init_weights(backbone_path=pretrained_path)

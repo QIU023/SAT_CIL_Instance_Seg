@@ -330,8 +330,11 @@ def train():
         print('Initializing weights...')
         # print(cfg.backbone.path, args.save_folder)
         # args.save_folder = ''
-        default_path = 'weights/mit_b2.pth'
-        yolact_net.init_weights(backbone_path=default_path)
+        if cfg.total_num_classes == 81:
+            pretrained_path = 'weights/mit_b4.pth'
+        else:
+            pretrained_path = 'weights/mit_b2.pth'
+        yolact_net.init_weights(backbone_path=pretrained_path)
 
     optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum,
                           weight_decay=args.decay)
@@ -495,7 +498,7 @@ def train():
                 #             print('Deleting old save...')
                 #             os.remove(latest)
 
-            args.validation_epoch = 10
+            args.validation_epoch = 5
             # print('aaaaa!!!!!!!!!!!!!')
             # if args.validation_epoch > 0:
             if epoch % args.validation_epoch == 0 and epoch > 0:
@@ -506,13 +509,6 @@ def train():
                     best_mask_AP = ret_metric[0]
                     yolact_net.save_weights(save_path(epoch, iteration, 'best_model'), epoch, iteration, ret_metric)
             yolact_net.save_weights(save_path(epoch, iteration, 'new_model'), epoch, iteration, (0., 0.))
-
-
-            # This is done per epoch
-            # if args.validation_epoch > 0:
-            #     if epoch % args.validation_epoch == 0 and epoch > 0:
-            #         compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None, 
-            #             active_class_range=(0,cfg.first_num_classes+cfg.extend))
 
         # Compute validation mAP after training is finished
         compute_validation_map(epoch, iteration, yolact_net, val_dataset, log if args.log else None, 
