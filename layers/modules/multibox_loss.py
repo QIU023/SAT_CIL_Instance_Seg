@@ -42,7 +42,8 @@ class MultiBoxLoss(nn.Module):
         self.neg_threshold = neg_threshold
         self.negpos_ratio = negpos_ratio
 
-        self.is_expert_range = range(is_expert_range[0], is_expert_range[1]+1)
+        if is_expert_range is not None:
+            self.is_expert_range = range(is_expert_range[0], is_expert_range[1]+1)
 
         weight_class = torch.zeros(len(self.to_learn_class)).cuda()
         weight_class[0] = 1

@@ -293,6 +293,9 @@ def train():
     elif args.resume == 'latest':
         args.resume = SavePath.get_latest(args.save_folder, cfg.name)
 
+    epoch_size = len(dataset) // args.batch_size
+    num_epochs = math.ceil(cfg.max_iter / epoch_size)
+
     if args.resume is not None:
         print('Initializing weights firstly...')
         if cfg.total_num_classes == 81:
@@ -302,6 +305,9 @@ def train():
         yolact_net.init_weights(backbone_path=pretrained_path)
         print('Resuming training, loading {}...'.format(args.resume))
         resume_epoch, resume_iter = yolact_net.load_weights(args.resume)
+        
+        resume_iter += epoch_size
+        resume_epoch += 1
 
         # print('Resuming training,loading expert, loading {}...'.format(args.load_expert_net))
         # yolact_net.load_weights_expert(args.load_expert_net)
@@ -323,7 +329,7 @@ def train():
 
         print(args.start_iter)
 
-        print('resume iteration index:', args.start_iter)
+        print('resume iteration index:', args.start_iter, ' epoch ', resume_epoch)
         assert args.start_iter > 0
 
     else:
@@ -369,8 +375,8 @@ def train():
     iteration = max(args.start_iter, 0)
     last_time = time.time()
 
-    epoch_size = len(dataset) // args.batch_size
-    num_epochs = math.ceil(cfg.max_iter / epoch_size)
+    best_mask_AP = 0.
+
 
     # Which learning rate adjustment step are we on? lr' = lr * gamma ^ step_index
     step_index = 0
