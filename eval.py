@@ -1073,7 +1073,7 @@ def calc_map(ap_data, active_class_range=(0,21)):
     print('Calculating mAP...')
     aps = [{'box': [], 'mask': []} for _ in iou_thresholds]
 
-    target_dict = np.zeros((3, 2, 20), dtype=np.float32)
+    target_dict = np.zeros((3, 2, active_class_range[1]-active_class_range[0]), dtype=np.float32)
     active_cls = range(active_class_range[0], active_class_range[1])
 
     mapping_threshold = [0.5, 0.75, 'all']

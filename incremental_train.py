@@ -224,9 +224,16 @@ class NetLoss(nn.Module):
         # print(type(self.net(images, sub=False)))
         # for item in self.net(images, sub=False):
         #     print(item.shape)
-        preds,preds_extend,proto, selfattention = self.net(images,sub=False)
-        # (preds,preds_extend,proto) = detect
-        preds_sub,proto_sub, selfattention_sub = self.sub_net(images,sub=True)
+        if self.criterion_SAT is not None:
+            preds,preds_extend,proto, selfattention = self.net(images,sub=False)
+            # (preds,preds_extend,proto) = detect
+        
+            preds_sub,proto_sub, selfattention_sub = self.sub_net(images,sub=True)
+        else:
+            preds,preds_extend,proto = self.net(images,sub=False)
+            # (preds,preds_extend,proto) = detect
+        
+            preds_sub,proto_sub = self.sub_net(images,sub=True)
         # (preds_sub,proto_sub) = sub_detect
 
         losses = self.criterion(self.net, preds_extend, targets, masks, num_crowds)

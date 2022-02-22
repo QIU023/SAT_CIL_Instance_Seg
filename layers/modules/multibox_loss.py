@@ -47,7 +47,7 @@ class MultiBoxLoss(nn.Module):
 
         weight_class = torch.zeros(len(self.to_learn_class)).cuda()
         weight_class[0] = 1
-        if self.is_expert_range is not None:
+        if is_expert_range is not None:
             for c in self.is_expert_range:
                 weight_class[c] = 1
         else:

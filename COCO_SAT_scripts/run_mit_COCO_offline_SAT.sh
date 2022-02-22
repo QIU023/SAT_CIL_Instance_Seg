@@ -12,7 +12,7 @@ exp_name1='coco_offline_exp'
 CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 initial_train.py \
     --config yolact_mitb2_coco_config_offline \
     --batch_size 8 --num_workers 8 \
-    --resume weights/COCO/offline/new_model_mix_transformer.pth \
+    --resume weights/COCO/offline/COCO_offline_final.pth \
     --save_folder weights/COCO/offline > 'train_log/'${exp_name1}'.log' 2>&1 &
 
 # CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 expert_train.py \
