@@ -260,7 +260,8 @@ def train():
         val_dataset = COCODetection_test(image_path=cfg.dataset.valid_images,
                                          prefetch_classes=prefetch_classes,
                                          info_file=cfg.dataset.valid_info,
-                                         transform=BaseTransform(MEANS))
+                                         transform=BaseTransform(MEANS),
+                                         mini_val=True)
     #
     if cfg.distillation:
         yolact_sub_net = Yolact(sub=True)
@@ -317,14 +318,21 @@ def train():
         args.start_iter = resume_iter
 
         if resume_iter == 0:
-            if 'final' in args.resume:
-                args.start_iter = 120000
+            if 'final' in args.resume or 'best' in args.resume:
+                if cfg.total_num_classes == 81:
+                    args.start_iter = 400000
+                else:
+                    args.start_iter = 120000
             else:
                 try:
                     args.start_iter = int(args.resume[:-4].split('_')[-1])
                 except:
                     print('warning! resume iteration is not found in ckpt! treat as training finished!')
-                    args.start_iter = 120000
+                    if cfg.total_num_classes == 81:
+                        args.start_iter = 400000
+                    else:
+                        args.start_iter = 120000
+                    # args.start_iter = 120000
                     # raise RuntimeError('please set the resume iteration!!!!!!')
 
         print(args.start_iter)

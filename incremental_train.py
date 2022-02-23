@@ -465,7 +465,8 @@ def train():
         val_dataset = COCODetection_test(image_path=cfg.dataset.valid_images,
                                     prefetch_classes=prefetch_classes,
                                     info_file=cfg.dataset.valid_info,
-                                    transform=BaseTransform(MEANS))
+                                    transform=BaseTransform(MEANS),
+                                    mini_val=True)
     #
     sub_net = None
     if cfg.distillation:

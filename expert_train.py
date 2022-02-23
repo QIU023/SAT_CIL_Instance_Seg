@@ -228,7 +228,8 @@ def train():
         val_dataset = COCODetection_test(image_path=cfg.dataset.valid_images,
                                          prefetch_classes=prefetch_classes,
                                          info_file=cfg.dataset.valid_info,
-                                         transform=BaseTransform(MEANS))
+                                         transform=BaseTransform(MEANS),
+                                         mini_val=True)
 
 
     # Parallel wraps the underlying module, but when saving and loading we don't want that

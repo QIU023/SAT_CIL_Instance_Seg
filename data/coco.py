@@ -399,7 +399,7 @@ class COCODetection_test(data.Dataset):
 
     def __init__(self, image_path, prefetch_classes, info_file, transform=None,
                  target_transform=None,
-                 dataset_name='MS COCO', has_gt=True):
+                 dataset_name='MS COCO', has_gt=True, mini_val=False):
         # Do this here because we have too many things named COCO
         from pycocotools.coco import COCO
 
@@ -417,6 +417,9 @@ class COCODetection_test(data.Dataset):
 
         if len(self.ids) == 0 or not has_gt:
             self.ids = list(self.coco.imgs.keys())
+
+        if mini_val:
+            self.ids = self.ids[:5000]
 
         self.transform = transform
         self.target_transform = COCOAnnotationTransform()
