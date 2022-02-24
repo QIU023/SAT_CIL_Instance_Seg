@@ -542,13 +542,14 @@ def train():
 
         if resume_iter == 0:
             if 'final' in args.resume:
-                args.start_iter = 120000
+                # if 
+                args.start_iter = args.max_iter
             else:
                 try:
                     args.start_iter = int(args.resume[:-4].split('_')[-1])
                 except:
                     print('warning! resume iteration is not found in ckpt! treat as training finished!')
-                    args.start_iter = 120000
+                    args.start_iter = args.max_iter
 
         print(args.start_iter)
 
@@ -580,17 +581,18 @@ def train():
                             pos_threshold=cfg.positive_iou_threshold,
                             neg_threshold=cfg.negative_iou_threshold,
                             negpos_ratio=cfg.ohem_negpos_ratio)
-    if cfg.loss_type != 'SAT_loss':
-        criterion_expert = MultiBoxLoss_expert(total_num_classes=cfg.total_num_classes,
-                                to_learn_class=to_learn,
-                                distillation=args.distillation,
-                                pos_threshold=cfg.positive_iou_threshold,
-                                neg_threshold=cfg.negative_iou_threshold,
-                                negpos_ratio=cfg.ohem_negpos_ratio)
 
-    # if cfg.loss_type == 'SAT_loss':
-    else:
-        criterion_SAT = Self_Attention_Transfer_InstanceSeg_Loss(True)
+    # if cfg.loss_type != 'SAT_loss':
+    #     criterion_expert = MultiBoxLoss_expert(total_num_classes=cfg.total_num_classes,
+    #                             to_learn_class=to_learn,
+    #                             distillation=args.distillation,
+    #                             pos_threshold=cfg.positive_iou_threshold,
+    #                             neg_threshold=cfg.negative_iou_threshold,
+    #                             negpos_ratio=cfg.ohem_negpos_ratio)
+
+    # # if cfg.loss_type == 'SAT_loss':
+    # else:
+    criterion_SAT = Self_Attention_Transfer_InstanceSeg_Loss(True)
         # criterion_SAT = None
 
     if args.batch_alloc is not None:

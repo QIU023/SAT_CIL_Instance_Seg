@@ -812,6 +812,30 @@ yolact_mitb2_coco_config_40with40_incremental = yolact_base_config.copy({
     # 'lr_steps': (60000, 100000),
 })
 
+SAT_yolact_mitb2_coco_config_40with40_incremental = yolact_base_config.copy({
+    'name': 'mix_transformer',  # Will default to yolact_resnet50_pascal
+
+    # Dataset stuff
+    'backbone': mit_b4_backbone.copy({
+        'pred_scales': [[16], [32], [64], [128], [256], [512]],
+        'use_square_anchors': False,
+        'path': 'mit_b4.pth',
+    }),
+    # 'dataset': pascal_sbd_dataset,
+    # 'num_classes': len(pascal_sbd_dataset.class_names) + 1,
+    'distillation': True,
+    'expert': False,
+    'total_num_classes': 81,
+    'first_num_classes': 40,
+    'extend': 40,
+    'ratio': 2,
+    'max_size': 512,
+    
+    'loss_type':'SAT_loss',
+    # 'max_iter': 120000,
+    # 'lr_steps': (60000, 100000),
+})
+
 yolact_mitb2_coco_config_offline = yolact_base_config.copy({
     'name': 'mix_transformer',  # Will default to yolact_resnet50_pascal
 
