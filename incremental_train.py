@@ -453,7 +453,7 @@ def split_classes(cfg):
 
 def train():
     if not os.path.exists(args.save_folder):
-        os.mkdir(args.save_folder)
+        os.makedirs(args.save_folder)
   #  CUDA_VISIBLE_DEVICES = [0]
     to_learn, prefetch_classes, remain = split_classes(cfg)
     dataset = COCODetection(image_path=cfg.dataset.train_images,

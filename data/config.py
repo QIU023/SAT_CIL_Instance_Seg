@@ -743,7 +743,7 @@ yolact_base_config = coco_base_config.copy({
 
     'use_semantic_segmentation_loss': True,
 
-    # 'loss_type': 'MT_loss'
+    'loss_type': 'MT_loss'
 })
 
 yolact_mitb2_coco_config_40with40 = yolact_base_config.copy({
