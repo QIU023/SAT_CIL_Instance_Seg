@@ -743,7 +743,7 @@ yolact_base_config = coco_base_config.copy({
 
     'use_semantic_segmentation_loss': True,
 
-    'loss_type': 'MT_loss'
+    # 'loss_type': 'MT_loss'
 })
 
 yolact_mitb2_coco_config_40with40 = yolact_base_config.copy({
@@ -807,7 +807,9 @@ yolact_mitb2_coco_config_40with40_incremental = yolact_base_config.copy({
     'first_num_classes': 40,
     'extend': 40,
     'ratio': 2,
-    'max_size': 512
+    'max_size': 512,
+
+    'loss_type': 'MT_loss'
     # 'max_iter': 120000,
     # 'lr_steps': (60000, 100000),
 })
@@ -1248,6 +1250,8 @@ yolact_mitb2_pascal_config_incremental_15with5 = yolact_resnet50_config.copy({
     'task': '15-5',
     'max_iter': 120000,
     'lr_steps': (60000, 100000),
+
+    'loss_type': 'MT_loss',
     # 'save_folder': 'weights/15+5',
     
     'backbone': mit_b2_backbone.copy({
