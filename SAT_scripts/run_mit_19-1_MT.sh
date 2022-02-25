@@ -23,7 +23,7 @@ CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 incremental_train.py \
     --config yolact_mitb2_pascal_config_incremental \
     --batch_size 8 --num_workers 8 \
     --save_folder weights/VOC/19-1 \
-    --load_expert_net weights/VOC/19-1/19-1_expect_final.pth \
+    --load_expert_net weights/VOC/19-1/19-1_1_expert_final.pth \
     --load_distillation_net weights/VOC/19-1/19-1_0_teacher_final.pth > 'train_log/'${exp_name3}'.log' 2>&1 &
 
 # CUDA_VISIBLE_DEVICES=${DEVICES} sh ./scripts/

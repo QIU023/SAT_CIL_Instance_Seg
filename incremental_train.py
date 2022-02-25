@@ -582,17 +582,17 @@ def train():
                             neg_threshold=cfg.negative_iou_threshold,
                             negpos_ratio=cfg.ohem_negpos_ratio)
 
-    # if cfg.loss_type != 'SAT_loss':
-    #     criterion_expert = MultiBoxLoss_expert(total_num_classes=cfg.total_num_classes,
-    #                             to_learn_class=to_learn,
-    #                             distillation=args.distillation,
-    #                             pos_threshold=cfg.positive_iou_threshold,
-    #                             neg_threshold=cfg.negative_iou_threshold,
-    #                             negpos_ratio=cfg.ohem_negpos_ratio)
+    if cfg.loss_type != 'SAT_loss':
+        criterion_expert = MultiBoxLoss_expert(total_num_classes=cfg.total_num_classes,
+                                to_learn_class=to_learn,
+                                distillation=args.distillation,
+                                pos_threshold=cfg.positive_iou_threshold,
+                                neg_threshold=cfg.negative_iou_threshold,
+                                negpos_ratio=cfg.ohem_negpos_ratio)
 
     # # if cfg.loss_type == 'SAT_loss':
-    # else:
-    criterion_SAT = Self_Attention_Transfer_InstanceSeg_Loss(True)
+    else:
+        criterion_SAT = Self_Attention_Transfer_InstanceSeg_Loss(True)
         # criterion_SAT = None
 
     if args.batch_alloc is not None:

@@ -1564,6 +1564,61 @@ SAT_yolact_mitb2_pascal_config_incremental_10with10 = yolact_resnet50_config.cop
 
 })
 
+MT_yolact_mitb2_pascal_config_incremental_10with5_1_expert = yolact_resnet50_config.copy({
+    'name': 'mix_transformer', # Will default to yolact_resnet50_pascal
+    # 'loss_type': 'SAT_loss',
+    
+    # Dataset stuff
+    'dataset': pascal_sbd_dataset,
+    'num_classes': len(pascal_sbd_dataset.class_names) + 1,
+    'distillation':False,
+    'expert':True,
+    'total_num_classes': 21,
+    'first_num_classes':10,
+    'task': '10-5',
+    'extend': 5,
+    'ratio': 2,
+    'max_iter': 50000,
+    'lr_steps': (30000, 40000),
+    # 'save_folder': 'weights/15+5',
+    
+    'backbone': mit_b2_backbone.copy({
+        'pred_scales': [[16], [32], [64], [128], [256], [512]],
+        'use_square_anchors': False,
+        'path': 'mit_b2.pth',
+    }),
+
+    'max_size': 512,
+
+})
+
+MT_yolact_mitb2_pascal_config_incremental_10with5_2_expert = yolact_resnet50_config.copy({
+    'name': 'mix_transformer', # Will default to yolact_resnet50_pascal
+    # 'loss_type': 'SAT_loss',
+    
+    # Dataset stuff
+    'dataset': pascal_sbd_dataset,
+    'num_classes': len(pascal_sbd_dataset.class_names) + 1,
+    'distillation':False,
+    'expert':True,
+    'total_num_classes': 21,
+    'first_num_classes':15,
+    'task': '10-5',
+    'extend': 5,
+    'ratio': 2,
+    'max_iter': 50000,
+    'lr_steps': (30000, 40000),
+    # 'save_folder': 'weights/15+5',
+    
+    'backbone': mit_b2_backbone.copy({
+        'pred_scales': [[16], [32], [64], [128], [256], [512]],
+        'use_square_anchors': False,
+        'path': 'mit_b2.pth',
+    }),
+
+    'max_size': 512,
+})
+
 SAT_yolact_mitb2_pascal_config_incremental_10with5_1 = yolact_resnet50_config.copy({
     'name': 'mix_transformer', # Will default to yolact_resnet50_pascal
     'loss_type': 'SAT_loss',
