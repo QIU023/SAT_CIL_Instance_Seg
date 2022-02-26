@@ -208,7 +208,7 @@ class NetLoss(nn.Module):
 
     def __init__(self, net=None,sub_net=None,expert_net=None,
         criterion=None,criterion_dis=None,
-        criterion_expert=None,criterion_SAT=None):
+        criterion_expert=None,criterion_SAT=None, criterion_SAT_expert=None):
         super(NetLoss, self).__init__()
 
         self.net = net
@@ -218,7 +218,9 @@ class NetLoss(nn.Module):
         self.criterion_dis = criterion_dis
         self.criterion_expert = criterion_expert
         self.criterion_SAT = criterion_SAT
+        self.criterion_SAT_expert = criterion_SAT_expert
         self.SAT_weight = 400
+        self.SAT_expert_weight = 100
 
     def forward(self, images, targets, masks, num_crowds):
         # print(type(self.net(images, sub=False)))
@@ -243,18 +245,22 @@ class NetLoss(nn.Module):
             losses['D'] = losses_dis
         
         if self.expert is not None:
-            preds_expert, proto_expert = self.expert(images, sub=False)
+            preds_expert, proto_expert, selfattention_expert = self.expert(images, sub=False)
             losses_expert = self.criterion_expert(self.net,preds_expert,preds_extend,proto,proto_expert,targets,masks,num_crowds)
             losses['E'] = losses_expert
 
         if self.criterion_SAT is not None:
-            losses_SAT = self.SAT_weight*self.criterion_SAT(selfattention_sub, selfattention, masks, None)
+            losses_SAT = self.SAT_weight*self.criterion_SAT(selfattention_sub, selfattention, masks, bbox=None, class_target=None)
             losses['SAT'] = losses_SAT
+            
+        if self.expert is not None and self.criterion_SAT_expert is not None:
+            losses_SAT_expert = self.SAT_expert_weight*self.criterion_SAT(selfattention_expert, selfattention, masks, bbox=None, class_target=targets)
+            losses['SAT'] += losses_SAT_expert
 
         return losses
 
 class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
-    def __init__(self, instance_mask_region=True):
+    def __init__(self, instance_mask_region=True, expert_only=None):
         super(Self_Attention_Transfer_InstanceSeg_Loss, self).__init__()
 
         self.instance_mask_region = instance_mask_region
@@ -262,7 +268,9 @@ class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
         self.reduction_MiT = [8,4,2,1]
         self.heads_MiT = [2,3,5,8]
 
-    def forward(self, old_network_SelfAttention_arr, new_network_SelfAttention_arr, instance_mask, bbox):
+        self.expert_only = expert_only
+
+    def forward(self, old_network_SelfAttention_arr, new_network_SelfAttention_arr, instance_mask, bbox, class_target):
         scale_SA_loss = 0.
         # loss = 0.
 
@@ -272,11 +280,6 @@ class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
             assert old_network_SelfAttention.shape == new_network_SelfAttention.shape, \
                 f"old network:{old_network_SelfAttention.shape} and new network:{new_network_SelfAttention.shape} have different shape Self-Attention Tensor!!!!"
             
-#                     resized_labels.append(sc_arr)
-            # resize_label = torch.stack(resize_label, dim=0).cuda()
-            # print(instance_mask.shape)
-            # _, H, W = instance_mask[0].shape
-            # assert L == H * W, "input shape  "
             Bs, Heads, L, L_1 = old_network_SelfAttention.shape
             sc = self.scale_MiT[ii]
             
@@ -287,15 +290,11 @@ class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
             new_network_SelfAttention = new_network_SelfAttention.view(Bs, sc, sc, Heads, L_1)
 
             # loss = 0.
-            if self.instance_mask_region:           # using instance mask to do Region Pooling!
+            if self.instance_mask_region:           # using instance mask to do Region Pooling for Instance Segmentation
                 # resize_label = []
                 batch_SA_loss = 0.
                 for j in range(Bs):
-                    resize_instance_mask_j = []
                     instance_num = instance_mask[j].shape[0]
-
-                    # print(instance_mask[j].shape)
-                    # print(instance_mask.shape)
 
                     instance_img_mask = instance_mask[j]
                     old_img_SelfAttention = old_network_SelfAttention[j]
@@ -303,17 +302,17 @@ class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
                     
                     img_SA_loss = 0.
                     for jj in range(instance_num):
-                    # print(instance_mask[j].max(), instance_mask[j].min())
+
+                        if self.expert_only is not None:      
+                            cur_img_class = class_target[j]                      
+                            cur_instance_class = int(cur_img_class[jj].item())
+                            if cur_instance_class not in self.expert_only:
+                                continue
+
                         lbl_jj = Ftrans.to_pil_image(instance_mask[j][jj].cpu().numpy().astype(np.uint8))
                         lbl_jj = Ftrans.resize(lbl_jj, (sc,sc), InterpolationMode.NEAREST)
                         lbl_jj = np.array(lbl_jj)
-                        # lbl_jj2 = deepcopy(lbl_jj)
-                        # lbl_jj2[lbl_jj2 == 1] = 255
-                        # lbl_jj2 = Image.fromarray(lbl_jj2)
-                        # lbl_jj2.save(f'debug/{ii}_scale_{j}_image_{jj}_instance.png')
                         instance = torch.from_numpy(lbl_jj).bool()
-
-                        # print((instance==0).sum()/(sc*sc))
 
                         old_mean_SelfAttention = old_img_SelfAttention[instance].mean(dim=0)
                         new_mean_SelfAttention = new_img_SelfAttention[instance].mean(dim=0)
@@ -322,7 +321,6 @@ class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
                         for hs in range(Heads):
                             old_hs_SA = old_mean_SelfAttention[hs]
                             new_hs_SA = new_mean_SelfAttention[hs]
-                            # print(old_hs_SA.shape)
                             
                             hs_SA_loss = torch.frobenius_norm(old_hs_SA-new_hs_SA, dim=-1)
                             
@@ -333,29 +331,23 @@ class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
                     batch_SA_loss += img_SA_loss
                 batch_SA_loss /= Bs
                 scale_SA_loss += batch_SA_loss
-            else:                                   # using bbox region to do region pooling
+            else:                                   # using bbox region to do region pooling for Object Detection
                 batch_SA_loss = 0.
                 for j in range(Bs):
-                    resize_instance_mask_j = []
                     instance_num = bbox[j].shape[0]
 
-                    # instance_img_mask = instance_mask[j]
                     old_img_SelfAttention = old_network_SelfAttention[j]
                     new_img_SelfAttention = new_network_SelfAttention[j]
                     
                     img_SA_loss = 0.
-                    # for jj in range(instance_num):
-                    # # print(instance_mask[j].max(), instance_mask[j].min())
-                    #     lbl_jj = Ftrans.to_pil_image(instance_mask[j][jj].cpu().numpy().astype(np.uint8))
-                    #     lbl_jj = Ftrans.resize(lbl_jj, (sc,sc), InterpolationMode.NEAREST)
-                    #     instance = torch.from_numpy(np.array(lbl_jj)).bool()
-                    #     resize_instance_mask_j.append(lbl_jj)
-                    # resize_instance_mask_j = torch.stack(resize_instance_mask_j, dim=0)
-                    # resize_label.append(resize_instance_mask_j)
-                    # batch_size = instance_mask.shape[0]
-                    # for i, instance_img_mask in enumerate(resize_label):
 
-                    for bbox_item in bbox[j]:
+                    for jj, bbox_item in enumerate(bbox[j]):
+
+                        if self.expert_only is not None:         
+                            cur_img_class = class_target[j]                   
+                            cur_instance_class = int(cur_img_class[jj].item())
+                            if cur_instance_class not in self.expert_only:
+                                continue
 
                         c_x, c_y, h, w = bbox_item
                         begin_w = c_x - (w//2)
@@ -371,7 +363,6 @@ class Self_Attention_Transfer_InstanceSeg_Loss(nn.Module):
                         for hs in range(Heads):
                             old_hs_SA = old_mean_SelfAttention[hs]
                             new_hs_SA = new_mean_SelfAttention[hs]
-                            # print(old_hs_SA.shape)
                             
                             hs_SA_loss = torch.frobenius_norm(old_hs_SA-new_hs_SA, dim=-1)
                             
@@ -410,27 +401,6 @@ class CustomDataParallel(nn.DataParallel):
             out[k] = torch.stack([output[k].to(output_device) for output in outputs])
 
         return out
-
-
-# def split_classes(cfg):
-#     first_num_classes = cfg.first_num_classes
-#     learn_num_per_step = int(cfg.task.split('-')[1])
-#     for i in range(cfg.step):
-#         first_num_classes += learn_num_per_step
-
-#     total_number = cfg.total_num_classes - 1
-#     # to_learn
-#     original = list(range(total_number + 1))
-#     learned_class = []
-#     if 'expert' not in cfg.name:
-#         learned_class = list(range(first_num_classes+1))
-#     current_learn_class = list(range(first_num_classes+1, 1+first_num_classes+learn_num_per_step))
-#     remaining = list(range(current_learn_class[-1]+1, total_number+1))
-    
-#     print(f'learning class: {current_learn_class}, previous learned class: {learned_class}, remain: {remaining} not learned!')
-
-#     return current_learn_class, learned_class, remaining
-
 
 def split_classes(cfg):
     first_num_classes = cfg.first_num_classes
@@ -575,6 +545,7 @@ def train():
     criterion_dis = None
     criterion_expert = None
     criterion_SAT = None
+    criterion_SAT_expert = None
     criterion_dis = MultiBoxLoss_dis(total_num_classes=cfg.total_num_classes,
                             to_learn_class=to_learn,
                             distillation=args.distillation,
@@ -582,17 +553,19 @@ def train():
                             neg_threshold=cfg.negative_iou_threshold,
                             negpos_ratio=cfg.ohem_negpos_ratio)
 
-    if cfg.loss_type != 'SAT_loss':
-        criterion_expert = MultiBoxLoss_expert(total_num_classes=cfg.total_num_classes,
-                                to_learn_class=to_learn,
-                                distillation=args.distillation,
-                                pos_threshold=cfg.positive_iou_threshold,
-                                neg_threshold=cfg.negative_iou_threshold,
-                                negpos_ratio=cfg.ohem_negpos_ratio)
+    # if cfg.loss_type != 'SAT_loss':
+    criterion_expert = MultiBoxLoss_expert(total_num_classes=cfg.total_num_classes,
+                            to_learn_class=to_learn,
+                            distillation=args.distillation,
+                            pos_threshold=cfg.positive_iou_threshold,
+                            neg_threshold=cfg.negative_iou_threshold,
+                            negpos_ratio=cfg.ohem_negpos_ratio)
 
-    # # if cfg.loss_type == 'SAT_loss':
-    else:
+    if cfg.loss_type == 'SAT_loss':
+    # else:
         criterion_SAT = Self_Attention_Transfer_InstanceSeg_Loss(True)
+        if cfg.expert is not None:
+            criterion_SAT_expert = Self_Attention_Transfer_InstanceSeg_Loss(True, expert_only=prefetch_classes)
         # criterion_SAT = None
 
     if args.batch_alloc is not None:
@@ -601,7 +574,7 @@ def train():
             print('Error: Batch allocation (%s) does not sum to batch size (%s).' % (args.batch_alloc, args.batch_size))
             exit(-1)
 
-    net = NetLoss(net, sub_net, expert_net, criterion, criterion_dis,criterion_expert,criterion_SAT)
+    net = NetLoss(net, sub_net, expert_net, criterion, criterion_dis,criterion_expert,criterion_SAT,criterion_SAT_expert)
     # net = CustomDataParallel(NetLoss(net,sub_net, criterion,criterion_dis))
     # if torch.cuda.device_count() > 1:
     net = CustomDataParallel(net)

@@ -919,6 +919,9 @@ class Yolact_expert(nn.Module):
         self.selected_layers = cfg.backbone.selected_layers
         src_channels = self.backbone.channels
 
+        print(cfg.loss_type)
+        self.return_self_attention = cfg.loss_type == 'SAT_loss'
+
         if cfg.use_maskiou:
             self.maskiou_net = FastMaskIoUNet()
 
@@ -1180,9 +1183,10 @@ class Yolact_expert(nn.Module):
             if cfg.use_semantic_segmentation_loss:
                 pred_outs_extend['segm'] = self.semantic_seg_conv(outs[0])
             if sub == False:
+                if self.return_self_attention:
+                    return pred_outs_extend, proto_dis, attn
                 return  pred_outs_extend, proto_dis
         else:
-
             pred_outs_extend['conf_extend'] = F.softmax(
                     pred_outs_extend['conf_extend'][:, :, :len(self.to_learn)], -1)
             return self.detect(pred_outs_extend, self)
