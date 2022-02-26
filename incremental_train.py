@@ -245,7 +245,11 @@ class NetLoss(nn.Module):
             losses['D'] = losses_dis
         
         if self.expert is not None:
-            preds_expert, proto_expert, selfattention_expert = self.expert(images, sub=False)
+            if self.criterion_SAT is not None:
+                preds_expert, proto_expert, selfattention_expert = self.expert(images, sub=False)
+            else:
+                preds_expert, proto_expert = self.expert(images, sub=False)
+                
             losses_expert = self.criterion_expert(self.net,preds_expert,preds_extend,proto,proto_expert,targets,masks,num_crowds)
             losses['E'] = losses_expert
 
