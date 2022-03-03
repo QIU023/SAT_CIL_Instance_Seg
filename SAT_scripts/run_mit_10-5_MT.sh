@@ -25,9 +25,17 @@ exp_name5='10-5_2_MT_student_exp'
 #     --batch_size 8 --num_workers 8 \
 #     --save_folder weights/VOC/10-5_2_expert_tempdir > 'train_log/'${exp_name4}'.log' 2>&1 &
 
+# CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 incremental_train.py \
+#     --config MT_yolact_mitb2_pascal_config_incremental_10with5_1_incremental \
+#     --batch_size 8 --num_workers 8 \
+#     --load_distillation_net weights/VOC/10-5/10-5_0_teacher_final.pth \
+#     --load_expert_net weights/VOC/10-5/10-5_1_expert_final.pth \
+#     --resume weights/VOC/10-5_1_MT_student_final.pth \
+#     --save_folder weights/VOC/10-5_tempdir/ > 'train_log/'${exp_name3}'.log' 2>&1 &
+
 CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 incremental_train.py \
-    --config MT_yolact_mitb2_pascal_config_incremental_10with5_1_incremental \
+    --config MT_yolact_mitb2_pascal_config_incremental_10with5_2_incremental \
     --batch_size 8 --num_workers 8 \
-    --load_distillation_net weights/VOC/10-5/10-5_0_teacher_final.pth \
-    --load_expert_net weights/VOC/10-5/10-5_1_expert_final.pth \
-    --save_folder weights/VOC/10-5_tempdir/ > 'train_log/'${exp_name3}'.log' 2>&1 &
+    --load_distillation_net weights/VOC/10-5/10-5_1_MT_student_final.pth \
+    --load_expert_net weights/VOC/10-5/10-5_2_expert_final.pth \
+    --save_folder weights/VOC/10-5_tempdir/ > 'train_log/'${exp_name5}'.log' 2>&1 &

@@ -10,11 +10,11 @@ exp_name2='19-1_1_expert_exp'
 exp_name3='19-1_1_MT_student_exp'
 
 
-# CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 initial_train.py \
-#     --config yolact_mitb2_pascal_config_init \
-#     --batch_size 8 --num_workers 8 \
-#     --save_folder weights/VOC/19-1_temp/ \
-#     --resume weights/VOC/19-1/19-1_0_teacher_final.pth > 'train_log/'${exp_name}'.log' 2>&1 &
+CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 initial_train.py \
+    --config yolact_mitb2_pascal_config_init \
+    --batch_size 8 --num_workers 8 \
+    --save_folder weights/VOC/19-1/ \
+    --resume weights/VOC/19-1/19-1_0_teacher_final.pth > 'train_log/'${exp_name}'.log' 2>&1 &
 
 # CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 expert_train.py \
 #     --config yolact_mitb2_pascal_config_expert \
