@@ -38,4 +38,5 @@ CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 incremental_train.py \
     --batch_size 8 --num_workers 8 \
     --load_distillation_net weights/VOC/10-5/10-5_1_MT_student_final.pth \
     --load_expert_net weights/VOC/10-5/10-5_2_expert_final.pth \
+    --resume weights/VOC/10-5/10-5_2_MT_student_final.pth \
     --save_folder weights/VOC/10-5_tempdir/ > 'train_log/'${exp_name5}'.log' 2>&1 &

@@ -143,3 +143,44 @@ usage: incremental_train.py [-h] [--batch_size BATCH_SIZE] [--step STEP]
                             [--no_interrupt] [--batch_alloc BATCH_ALLOC]
                             [--no_autoscale]
 incremental_train.py: error: unrecognized arguments: /
+total learned or learning class: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20], 
+ incremental class: [16, 17, 18, 19, 20], 
+ remain: [] not learned!
+loading annotations into memory...
+Done (t=0.15s)
+creating index...
+index created!
+loading annotations into memory...
+Done (t=0.08s)
+creating index...
+index created!
+Traceback (most recent call last):
+  File "incremental_train.py", line 879, in <module>
+    train()
+  File "incremental_train.py", line 447, in train
+    yolact_sub_net = Yolact(sub=True)
+  File "/opt/tiger/occupy_arnold/SAT_CIL_Instance_Seg/yolact.py", line 668, in __init__
+    self.backbone = construct_backbone(cfg.backbone)
+  File "/opt/tiger/occupy_arnold/SAT_CIL_Instance_Seg/backbone.py", line 454, in construct_backbone
+    backbone = cfg.type(*cfg.args)
+  File "/opt/tiger/occupy_arnold/SAT_CIL_Instance_Seg/modules/segformer_offical/mix_transformer.py", line 474, in __init__
+    drop_rate=0.0, drop_path_rate=0.1, return_attn=return_attn)
+  File "/opt/tiger/occupy_arnold/SAT_CIL_Instance_Seg/modules/segformer_offical/mix_transformer.py", line 301, in __init__
+    for i in range(depths[3])])
+  File "/opt/tiger/occupy_arnold/SAT_CIL_Instance_Seg/modules/segformer_offical/mix_transformer.py", line 301, in <listcomp>
+    for i in range(depths[3])])
+  File "/opt/tiger/occupy_arnold/SAT_CIL_Instance_Seg/modules/segformer_offical/mix_transformer.py", line 155, in __init__
+    attn_drop=attn_drop, proj_drop=drop, sr_ratio=sr_ratio, return_attn=return_attn)
+  File "/opt/tiger/occupy_arnold/SAT_CIL_Instance_Seg/modules/segformer_offical/mix_transformer.py", line 75, in __init__
+    self.proj = nn.Linear(dim, dim)
+  File "/usr/local/lib/python3.7/dist-packages/torch/nn/modules/linear.py", line 90, in __init__
+    self.reset_parameters()
+  File "/usr/local/lib/python3.7/dist-packages/torch/nn/modules/linear.py", line 96, in reset_parameters
+    init.kaiming_uniform_(self.weight, a=math.sqrt(5))
+  File "/usr/local/lib/python3.7/dist-packages/torch/nn/init.py", line 395, in kaiming_uniform_
+    return tensor.uniform_(-bound, bound)
+  File "/usr/local/lib/python3.7/dist-packages/torch/autograd/grad_mode.py", line 129, in __exit__
+    torch.set_grad_enabled(self.prev)
+  File "/usr/local/lib/python3.7/dist-packages/torch/autograd/grad_mode.py", line 213, in __init__
+    def __init__(self, mode: bool) -> None:
+KeyboardInterrupt

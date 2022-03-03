@@ -34,8 +34,8 @@ exp_name5='10-5_2_SAT_exp'
 
 
 CUDA_VISIBLE_DEVICES=${DEVICES} nohup python3 incremental_train.py \
-    --config SAT_yolact_mitb2_pascal_config_incremental_10with5_1 \
+    --config SAT_yolact_mitb2_pascal_config_incremental_10with5_2 \
     --batch_size 8 --num_workers 8 \
-    --load_distillation_net weights/VOC/10-5/10-5_0_teacher_final.pth \
-    --load_expert_net weights/VOC/10-5/10-5_1_expert_final.pth \
-    --save_folder weights/VOC/10-5/ > 'train_log/'${exp_name4}'.log' 2>&1 &
+    --load_distillation_net weights/VOC/10-5/10-5_1_SAT_student_final.pth \
+    --load_expert_net weights/VOC/10-5/10-5_2_expert_final.pth \
+    --save_folder weights/VOC/10-5/ > 'train_log/'${exp_name5}'.log' 2>&1 &
